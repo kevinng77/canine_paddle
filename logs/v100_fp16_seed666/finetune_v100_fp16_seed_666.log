@@ -1,0 +1,121 @@
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - **********  Configuration Arguments **********
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - candidate_beam: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - checkout_steps: 9000
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - dev_split_ratio: 0.002
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - do_file_construct: False
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - do_predict: False
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - do_train: True
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - fp16: True
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - gradient_accumulation_steps: 1
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - learning_rate: 5e-05
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - logging_steps: 1000
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - max_answer_length: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - max_position: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - max_seq_length: 2048
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - max_to_predict: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - num_train_epochs: 3
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - output_dir: data/tydiqa_baseline_model/train
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - output_prediction_file: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - precomputed_predict_file: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - predict_batch_size: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - predict_file: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - scale_loss: 4096.0
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - seed: 666
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - state_dict_path: None
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - train_batch_size: 16
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - train_input_dir: data/tydi/train.h5df
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - warmup_proportion: 0.1
+06/04/2022 00:27:36 - INFO - tydi_canine.run_tydi_lib - **************************************************
+06/04/2022 00:27:42 - INFO - tydi_canine.run_tydi_lib - >>> num_training_samples: 459627
+06/04/2022 00:27:42 - INFO - tydi_canine.run_tydi_lib - >>> num_dev_samples: 921
+06/04/2022 00:27:42 - INFO - tydi_canine.run_tydi_lib - >>> theory batch size (batch * gradient step * n_gpus): 16
+06/04/2022 00:27:42 - INFO - tydi_canine.run_tydi_lib - >>> num_train_steps for each GPU: 86181
+06/04/2022 00:27:42 - INFO - tydi_canine.run_tydi_lib - >>> start training...
+06/04/2022 00:34:34 - INFO - tydi_canine.run_tydi_lib - Step 1000/86181 train loss 2.5639 dev loss 1.5943 acc 20.39% diff 715.58 time 6.87min
+06/04/2022 00:41:27 - INFO - tydi_canine.run_tydi_lib - Step 2000/86181 train loss 1.4112 dev loss 1.2176 acc 70.98% diff 665.39 time 6.88min
+06/04/2022 00:48:22 - INFO - tydi_canine.run_tydi_lib - Step 3000/86181 train loss 1.1286 dev loss 1.0319 acc 50.20% diff 618.82 time 6.92min
+06/04/2022 00:55:16 - INFO - tydi_canine.run_tydi_lib - Step 4000/86181 train loss 1.0775 dev loss 0.9825 acc 60.39% diff 622.58 time 6.91min
+06/04/2022 01:02:09 - INFO - tydi_canine.run_tydi_lib - Step 5000/86181 train loss 0.9766 dev loss 0.9072 acc 69.80% diff 562.08 time 6.88min
+06/04/2022 01:09:01 - INFO - tydi_canine.run_tydi_lib - Step 6000/86181 train loss 0.9630 dev loss 0.8658 acc 55.29% diff 546.22 time 6.86min
+06/04/2022 01:15:53 - INFO - tydi_canine.run_tydi_lib - Step 7000/86181 train loss 0.9486 dev loss 0.8679 acc 60.78% diff 570.67 time 6.87min
+06/04/2022 01:22:45 - INFO - tydi_canine.run_tydi_lib - Step 8000/86181 train loss 0.8629 dev loss 0.8304 acc 73.33% diff 548.35 time 6.86min
+06/04/2022 01:29:38 - INFO - tydi_canine.run_tydi_lib - Step 9000/86181 train loss 0.8617 dev loss 0.8325 acc 57.65% diff 562.36 time 6.89min
+06/04/2022 01:36:32 - INFO - tydi_canine.run_tydi_lib - Step 10000/86181 train loss 0.8346 dev loss 0.8192 acc 64.31% diff 559.13 time 6.90min
+06/04/2022 01:43:24 - INFO - tydi_canine.run_tydi_lib - Step 11000/86181 train loss 0.8450 dev loss 0.8092 acc 80.78% diff 523.09 time 6.87min
+06/04/2022 01:50:16 - INFO - tydi_canine.run_tydi_lib - Step 12000/86181 train loss 0.8250 dev loss 0.7971 acc 76.08% diff 556.95 time 6.87min
+06/04/2022 01:57:08 - INFO - tydi_canine.run_tydi_lib - Step 13000/86181 train loss 0.8254 dev loss 0.7633 acc 76.08% diff 484.05 time 6.87min
+06/04/2022 02:04:01 - INFO - tydi_canine.run_tydi_lib - Step 14000/86181 train loss 0.8151 dev loss 0.7300 acc 73.73% diff 578.37 time 6.89min
+06/04/2022 02:10:53 - INFO - tydi_canine.run_tydi_lib - Step 15000/86181 train loss 0.7961 dev loss 0.7688 acc 69.80% diff 478.42 time 6.86min
+06/04/2022 02:17:46 - INFO - tydi_canine.run_tydi_lib - Step 16000/86181 train loss 0.8093 dev loss 0.7540 acc 77.25% diff 523.15 time 6.89min
+06/04/2022 02:24:39 - INFO - tydi_canine.run_tydi_lib - Step 17000/86181 train loss 0.7657 dev loss 0.8123 acc 59.22% diff 602.72 time 6.88min
+06/04/2022 02:31:34 - INFO - tydi_canine.run_tydi_lib - Step 18000/86181 train loss 0.7840 dev loss 0.7746 acc 70.98% diff 507.16 time 6.91min
+06/04/2022 02:38:26 - INFO - tydi_canine.run_tydi_lib - Step 19000/86181 train loss 0.7468 dev loss 0.7556 acc 64.71% diff 560.11 time 6.88min
+06/04/2022 02:45:18 - INFO - tydi_canine.run_tydi_lib - Step 20000/86181 train loss 0.7367 dev loss 0.7248 acc 64.31% diff 526.23 time 6.87min
+06/04/2022 02:52:10 - INFO - tydi_canine.run_tydi_lib - Step 21000/86181 train loss 0.7472 dev loss 0.7493 acc 73.33% diff 432.68 time 6.87min
+06/04/2022 02:59:04 - INFO - tydi_canine.run_tydi_lib - Step 22000/86181 train loss 0.7230 dev loss 0.7352 acc 75.29% diff 445.21 time 6.89min
+06/04/2022 03:05:57 - INFO - tydi_canine.run_tydi_lib - Step 23000/86181 train loss 0.7725 dev loss 0.7238 acc 72.55% diff 523.95 time 6.90min
+06/04/2022 03:12:50 - INFO - tydi_canine.run_tydi_lib - Step 24000/86181 train loss 0.7169 dev loss 0.7195 acc 75.29% diff 545.27 time 6.88min
+06/04/2022 03:19:43 - INFO - tydi_canine.run_tydi_lib - Step 25000/86181 train loss 0.6993 dev loss 0.7470 acc 72.94% diff 438.25 time 6.89min
+06/04/2022 03:26:36 - INFO - tydi_canine.run_tydi_lib - Step 26000/86181 train loss 0.7315 dev loss 0.7003 acc 70.20% diff 478.67 time 6.87min
+06/04/2022 03:33:29 - INFO - tydi_canine.run_tydi_lib - Step 27000/86181 train loss 0.7119 dev loss 0.7046 acc 63.92% diff 543.61 time 6.89min
+06/04/2022 03:40:23 - INFO - tydi_canine.run_tydi_lib - Step 28000/86181 train loss 0.7097 dev loss 0.6885 acc 87.84% diff 391.15 time 6.90min
+06/04/2022 03:47:17 - INFO - tydi_canine.run_tydi_lib - Step 29000/86181 train loss 0.6944 dev loss 0.7150 acc 85.49% diff 427.03 time 6.90min
+06/04/2022 03:54:10 - INFO - tydi_canine.run_tydi_lib - Step 30000/86181 train loss 0.7214 dev loss 0.6583 acc 74.51% diff 513.29 time 6.89min
+06/04/2022 04:01:04 - INFO - tydi_canine.run_tydi_lib - Step 31000/86181 train loss 0.6916 dev loss 0.6620 acc 72.16% diff 470.83 time 6.90min
+06/04/2022 04:07:57 - INFO - tydi_canine.run_tydi_lib - Step 32000/86181 train loss 0.6611 dev loss 0.6821 acc 76.47% diff 427.81 time 6.88min
+06/04/2022 04:14:50 - INFO - tydi_canine.run_tydi_lib - Step 33000/86181 train loss 0.6687 dev loss 0.6291 acc 77.25% diff 441.50 time 6.88min
+06/04/2022 04:21:43 - INFO - tydi_canine.run_tydi_lib - Step 34000/86181 train loss 0.6407 dev loss 0.6507 acc 72.55% diff 443.13 time 6.89min
+06/04/2022 04:28:37 - INFO - tydi_canine.run_tydi_lib - Step 35000/86181 train loss 0.6749 dev loss 0.6653 acc 72.94% diff 440.21 time 6.90min
+06/04/2022 04:35:32 - INFO - tydi_canine.run_tydi_lib - Step 36000/86181 train loss 0.6299 dev loss 0.6490 acc 77.65% diff 429.04 time 6.91min
+06/04/2022 04:42:26 - INFO - tydi_canine.run_tydi_lib - Step 37000/86181 train loss 0.6020 dev loss 0.6514 acc 76.08% diff 396.53 time 6.91min
+06/04/2022 04:49:20 - INFO - tydi_canine.run_tydi_lib - Step 38000/86181 train loss 0.5854 dev loss 0.6379 acc 74.90% diff 445.26 time 6.90min
+06/04/2022 04:56:15 - INFO - tydi_canine.run_tydi_lib - Step 39000/86181 train loss 0.5825 dev loss 0.6451 acc 69.80% diff 460.94 time 6.90min
+06/04/2022 05:03:09 - INFO - tydi_canine.run_tydi_lib - Step 40000/86181 train loss 0.5882 dev loss 0.6741 acc 75.69% diff 371.52 time 6.92min
+06/04/2022 05:10:03 - INFO - tydi_canine.run_tydi_lib - Step 41000/86181 train loss 0.5977 dev loss 0.6419 acc 76.08% diff 407.44 time 6.90min
+06/04/2022 05:16:58 - INFO - tydi_canine.run_tydi_lib - Step 42000/86181 train loss 0.5626 dev loss 0.6461 acc 73.33% diff 413.36 time 6.91min
+06/04/2022 05:23:52 - INFO - tydi_canine.run_tydi_lib - Step 43000/86181 train loss 0.5767 dev loss 0.6318 acc 76.08% diff 397.93 time 6.90min
+06/04/2022 05:30:47 - INFO - tydi_canine.run_tydi_lib - Step 44000/86181 train loss 0.5772 dev loss 0.6259 acc 83.14% diff 363.72 time 6.91min
+06/04/2022 05:37:41 - INFO - tydi_canine.run_tydi_lib - Step 45000/86181 train loss 0.5561 dev loss 0.6156 acc 77.65% diff 395.43 time 6.90min
+06/04/2022 05:44:36 - INFO - tydi_canine.run_tydi_lib - Step 46000/86181 train loss 0.5543 dev loss 0.6232 acc 80.39% diff 398.97 time 6.92min
+06/04/2022 05:51:30 - INFO - tydi_canine.run_tydi_lib - Step 47000/86181 train loss 0.5588 dev loss 0.5954 acc 83.53% diff 376.12 time 6.90min
+06/04/2022 05:58:24 - INFO - tydi_canine.run_tydi_lib - Step 48000/86181 train loss 0.5077 dev loss 0.6336 acc 76.47% diff 380.83 time 6.91min
+06/04/2022 06:05:19 - INFO - tydi_canine.run_tydi_lib - Step 49000/86181 train loss 0.5209 dev loss 0.6345 acc 78.04% diff 352.67 time 6.92min
+06/04/2022 06:12:13 - INFO - tydi_canine.run_tydi_lib - Step 50000/86181 train loss 0.5108 dev loss 0.6244 acc 73.33% diff 403.41 time 6.89min
+06/04/2022 06:19:08 - INFO - tydi_canine.run_tydi_lib - Step 51000/86181 train loss 0.5423 dev loss 0.6132 acc 76.86% diff 386.69 time 6.92min
+06/04/2022 06:26:02 - INFO - tydi_canine.run_tydi_lib - Step 52000/86181 train loss 0.5355 dev loss 0.6272 acc 79.61% diff 340.98 time 6.90min
+06/04/2022 06:32:57 - INFO - tydi_canine.run_tydi_lib - Step 53000/86181 train loss 0.5002 dev loss 0.6013 acc 82.35% diff 380.51 time 6.93min
+06/04/2022 06:39:52 - INFO - tydi_canine.run_tydi_lib - Step 54000/86181 train loss 0.4795 dev loss 0.6266 acc 77.65% diff 371.20 time 6.92min
+06/04/2022 06:46:49 - INFO - tydi_canine.run_tydi_lib - Step 55000/86181 train loss 0.5227 dev loss 0.5976 acc 79.61% diff 353.32 time 6.95min
+06/04/2022 06:53:44 - INFO - tydi_canine.run_tydi_lib - Step 56000/86181 train loss 0.5122 dev loss 0.5779 acc 78.43% diff 364.48 time 6.92min
+06/04/2022 07:00:40 - INFO - tydi_canine.run_tydi_lib - Step 57000/86181 train loss 0.4769 dev loss 0.6298 acc 72.55% diff 409.29 time 6.93min
+06/04/2022 07:07:36 - INFO - tydi_canine.run_tydi_lib - Step 58000/86181 train loss 0.5030 dev loss 0.6051 acc 76.08% diff 363.33 time 6.93min
+06/04/2022 07:14:31 - INFO - tydi_canine.run_tydi_lib - Step 59000/86181 train loss 0.5013 dev loss 0.6057 acc 78.82% diff 360.09 time 6.92min
+06/04/2022 07:21:25 - INFO - tydi_canine.run_tydi_lib - Step 60000/86181 train loss 0.4577 dev loss 0.6088 acc 77.65% diff 350.70 time 6.91min
+06/04/2022 07:28:20 - INFO - tydi_canine.run_tydi_lib - Step 61000/86181 train loss 0.4668 dev loss 0.6101 acc 82.35% diff 323.24 time 6.92min
+06/04/2022 07:35:16 - INFO - tydi_canine.run_tydi_lib - Step 62000/86181 train loss 0.4551 dev loss 0.6123 acc 75.29% diff 377.21 time 6.93min
+06/04/2022 07:42:10 - INFO - tydi_canine.run_tydi_lib - Step 63000/86181 train loss 0.4213 dev loss 0.6087 acc 75.69% diff 382.31 time 6.91min
+06/04/2022 07:49:08 - INFO - tydi_canine.run_tydi_lib - Step 64000/86181 train loss 0.4634 dev loss 0.5936 acc 82.75% diff 335.58 time 6.96min
+06/04/2022 07:56:04 - INFO - tydi_canine.run_tydi_lib - Step 65000/86181 train loss 0.4126 dev loss 0.6074 acc 77.25% diff 396.01 time 6.93min
+06/04/2022 08:03:00 - INFO - tydi_canine.run_tydi_lib - Step 66000/86181 train loss 0.3984 dev loss 0.6096 acc 79.22% diff 366.32 time 6.94min
+06/04/2022 08:09:55 - INFO - tydi_canine.run_tydi_lib - Step 67000/86181 train loss 0.3958 dev loss 0.6426 acc 80.00% diff 347.97 time 6.92min
+06/04/2022 08:16:51 - INFO - tydi_canine.run_tydi_lib - Step 68000/86181 train loss 0.3759 dev loss 0.6520 acc 77.25% diff 352.36 time 6.94min
+06/04/2022 08:23:47 - INFO - tydi_canine.run_tydi_lib - Step 69000/86181 train loss 0.3784 dev loss 0.6275 acc 81.18% diff 333.68 time 6.92min
+06/04/2022 08:30:42 - INFO - tydi_canine.run_tydi_lib - Step 70000/86181 train loss 0.3840 dev loss 0.6674 acc 74.51% diff 350.96 time 6.93min
+06/04/2022 08:37:38 - INFO - tydi_canine.run_tydi_lib - Step 71000/86181 train loss 0.3721 dev loss 0.6515 acc 75.69% diff 353.77 time 6.92min
+06/04/2022 08:44:33 - INFO - tydi_canine.run_tydi_lib - Step 72000/86181 train loss 0.3557 dev loss 0.6460 acc 78.43% diff 323.48 time 6.93min
+06/04/2022 08:51:30 - INFO - tydi_canine.run_tydi_lib - Step 73000/86181 train loss 0.3680 dev loss 0.6091 acc 79.22% diff 342.16 time 6.94min
+06/04/2022 08:58:26 - INFO - tydi_canine.run_tydi_lib - Step 74000/86181 train loss 0.3640 dev loss 0.6008 acc 77.65% diff 340.39 time 6.94min
+06/04/2022 09:05:23 - INFO - tydi_canine.run_tydi_lib - Step 75000/86181 train loss 0.3556 dev loss 0.6482 acc 79.22% diff 327.03 time 6.95min
+06/04/2022 09:12:19 - INFO - tydi_canine.run_tydi_lib - Step 76000/86181 train loss 0.3334 dev loss 0.6557 acc 74.12% diff 373.60 time 6.94min
+06/04/2022 09:19:16 - INFO - tydi_canine.run_tydi_lib - Step 77000/86181 train loss 0.3262 dev loss 0.6312 acc 77.65% diff 332.23 time 6.94min
+06/04/2022 09:26:12 - INFO - tydi_canine.run_tydi_lib - Step 78000/86181 train loss 0.3143 dev loss 0.6563 acc 75.29% diff 343.55 time 6.94min
+06/04/2022 09:33:08 - INFO - tydi_canine.run_tydi_lib - Step 79000/86181 train loss 0.3399 dev loss 0.6303 acc 75.29% diff 357.41 time 6.94min
+06/04/2022 09:40:04 - INFO - tydi_canine.run_tydi_lib - Step 80000/86181 train loss 0.3466 dev loss 0.6393 acc 74.90% diff 344.90 time 6.93min
+06/04/2022 09:47:01 - INFO - tydi_canine.run_tydi_lib - Step 81000/86181 train loss 0.3333 dev loss 0.6676 acc 75.29% diff 351.24 time 6.94min
+06/04/2022 09:53:57 - INFO - tydi_canine.run_tydi_lib - Step 82000/86181 train loss 0.3125 dev loss 0.6624 acc 77.25% diff 349.19 time 6.94min
+06/04/2022 10:00:52 - INFO - tydi_canine.run_tydi_lib - Step 83000/86181 train loss 0.3069 dev loss 0.6524 acc 79.22% diff 338.28 time 6.92min
+06/04/2022 10:07:49 - INFO - tydi_canine.run_tydi_lib - Step 84000/86181 train loss 0.3288 dev loss 0.6635 acc 77.65% diff 349.00 time 6.94min
+06/04/2022 10:14:44 - INFO - tydi_canine.run_tydi_lib - Step 85000/86181 train loss 0.3320 dev loss 0.6472 acc 78.82% diff 343.57 time 6.92min
+06/04/2022 10:21:40 - INFO - tydi_canine.run_tydi_lib - Step 86000/86181 train loss 0.2967 dev loss 0.6594 acc 76.47% diff 351.12 time 6.94min
+06/04/2022 10:23:13 - INFO - tydi_canine.run_tydi_lib - Step 86181/86181 train loss 0.0493 dev loss 0.6592 acc 76.47% diff 351.12 time 1.54min
+06/04/2022 10:23:13 - INFO - tydi_canine.run_tydi_lib - training done, total steps trained: 86181

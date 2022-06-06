@@ -1,0 +1,10 @@
+.idea
+.history
+__pycache__
+*.bin
+*.pdparams
+*.gz
+data/*
+log/
+*.zip
+reproduction_results
