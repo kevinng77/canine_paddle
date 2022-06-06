@@ -39,8 +39,8 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
 
 | TydiQA 任务                        | Canine 论文精度 | 本仓库复现精度 |
 | ---------------------------------- | --------------- | -------------- |
-| Passage Selection Task (SELECTP)   | 66.0%           | 65.80%         |
-| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.17%         |
+| Passage Selection Task (SELECTP)   | 66.0%           | 65.83%         |
+| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.27%         |
 
 指标为macro F1；本仓库展示的复现结果为多次微调、预测、评估后的平均值。
 
@@ -278,8 +278,8 @@ python3 official_tydi/tydi_eval.py \
 
 | TydiQA 任务                        | Canine 论文精度 | 本仓库复现精度 |
 | ---------------------------------- | --------------- | -------------- |
-| Passage Selection Task (SELECTP)   | 66.0%           | 65.80%         |
-| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.17%         |
+| Passage Selection Task (SELECTP)   | 66.0%           | 65.83%         |
+| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.27%         |
 
 各次微调的日志、评估文件等可以在 `logs` 文件夹中查看。训练结果整理：
 
@@ -288,9 +288,9 @@ python3 official_tydi/tydi_eval.py \
 | V100                | 16         | 1              | 16              | 2021 | 3     | 66.01%            | 55.77%            | [百度网盘](https://pan.baidu.com/s/1zlGq0alZB04vbpl1lS77uw?pwd=xldb) |
 | V100                | 16         | 1              | 16              | 666  | 3     | 67.02%            | 56.17%            | [百度网盘](https://pan.baidu.com/s/1jr8bh2-BKX-DRtclkGl5xA?pwd=wyus) |
 | v100                | 16         | 32             | 512             | 5121 | 10    | 64.35%            | 53.58%            |                                                              |
+| 3090*4              | 14         | 9              | 504             | 5123 | 4     | 65.93%            | 55.60%            |                                                              |
 | ...还有两个正在测试 |            |                |                 |      |       |                   |                   |                                                              |
-|                     |            |                |                 |      |       |                   |                   |                                                              |
-| 平均                | -          | -              | -               |      | -     | 65.80%            | 55.17%            |                                                              |
+| 平均                | -          | -              | -               |      | -     | 65.83%            | 55.27%            |                                                              |
 
 此外，以下展示了**所有**复现过程中进行过的其他微调结果，由于参数配置问题，他们不被计入论文复现精度，但仍可以为该模型在Tydi任务上的训练效果提供一些信息。
 
