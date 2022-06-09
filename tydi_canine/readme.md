@@ -18,7 +18,7 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
 
 本仓库数据处理流程与 canine [论文仓库](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa) 一致，以下文件复制于 [canine/tydiqa](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa)，除注释和代码缩紧外无更改：
 
-+ `tydi_tokenization_interface.py`：Tydi 官方 Tokenizer 模板。
++ `tydi_tokenization_interface.py`：Tydi 官方 Tokenizer 模板（接口）。
 
 + `char_splitter.py`：为 canine 模型专门设计的 TydiQA Tokenizer。
 + `data.py` ：提供所有 TydiQA 数据处理所需要的基础解析函数。如 `byte_slice()` 等。
@@ -28,10 +28,10 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
 
 以下文件参考  [canine/tydiqa](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa) 并进行了修改：
 
-+ `pd_io.py`：转 TydiQA 数据到训练数据。[canine 原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/tf_io.py) 训练数据格式为 tf.tensor，现改为 list。 
-+ `postproc.py`：提供将logits输出转化为 Tydi 评估文件的模块。本次复现对其进行了内存优化、引入多线程计算 Tydi 评估文件。 
-+ `prepare_tydi_data.py`：储存训练数据。[原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/prepare_tydi_data.py) 采用 tfrecord 储存数据，现改为使用 h5df。
-+ `run_tydi_lib.py`：负责 tydi 任务微调、预测和评估。根据个人设备条件，修改了[原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/run_tydi_lib.py) 中的数据处理方式，超级参数等训练配置与官方一致。
++ `pd_io.py`：提供模型训练数据（如 `input_ids`) 的io接口。[canine 原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/tf_io.py) 训练数据格式为 tf.tensor，现改为 list。 
++ `postproc.py`：提供将模型logits输出转化为 Tydi 评估文件的模块。本次复现对其进行了内存优化、引入多线程计算 Tydi 评估文件。 
++ `prepare_tydi_data.py`：处理、并储存训练数据。[原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/prepare_tydi_data.py) 采用 tfrecord 储存数据，现改为使用 h5df。
++ `run_tydi_lib.py`：负责 tydi 任务微调、预测和评估。根据个人设备条件，修改了 [原代码](https://github.com/google-research/language/blob/master/language/canine/tydiqa/run_tydi_lib.py) 中的数据处理方式，超级参数等训练配置与官方一致。
 
 其他文件为paddle canine专门编写：
 
@@ -53,18 +53,16 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
 + `document_url`：原文链接。
 + `example_id`：每个（文章-问题）对应一个单独id。
 + `language`：文章的语言，包括：  <u>ARABIC，BENGALI，  FINNISH，  INDONESIAN， JAPANESE，  SWAHILI， KOREAN， RUSSIAN， TELUGU， THAI， ENGLISH</u>
-+ `passage_answer_candidates: List[Dict]`：文中每个段落在 `document_plaintext` 中的 byte 索引。
++ `passage_answer_candidates: List[Dict]`：文中每个段落在 `document_plaintext` 中的 byte 索引。如：
 
 ```json
-// passage_answer_candidates 内容示例
 {'plaintext_end_byte': 494, 'plaintext_start_byte': 1}
 ```
 
-+ `question_text`：问题。每个文章仅对应一个问题。
++ `question_text`：文章对应的问题。
 + `annotations:List[Dict]` ：包含了答案标注的信息。训练集中一个 `annotations` 中会存在多个答案标注。列表中的元素案例：
 
 ```json
-// annotations 内容示例
 {'annotation_id': 9676129447864545067, 'minimal_answer': {'plaintext_end_byte': -1, 'plaintext_start_byte': -1}, 'passage_answer': {'candidate_index': -1}, 'yes_no_answer': 'NONE'}
 ```
 
@@ -160,12 +158,13 @@ class InputFeatures(object):
 
 ## 6. 任务处理细节
 
-**Canine 基线将 tydi 任务答案分成了四类**：
+**Canine 官方处理 tydi 任务时，将答案分成了五类，以用于多分类任务 **：
 
 1. `None`：不存在答案。如上面这个 `annotation_id` 例子就是不存在答案。
-2. `yes_or_not`：`annotation`中的`yes_no_answer`查看。值范围为`yes/no/none`。如对问题 Is Creole a pidgin of French? 答案为 YES。若非是非问题，则值为 none
-3. `passage_index`：`annotation` 中的`'passage_answer'` 查看。值为答案在`passage_answer_candidates` 中的索引，如` {'candidate_index': 1}` 。段落索引从1开始
-4. `min_answer`：`annotation` 中的 `minimal_answer` 查看。值为答案在 `document_plaintext` 中的索引。一般如果存在 `min_answer` 的话，`passage_index` 也是存在的
+2. `yes`：表示该问题为是非问答题，且问题的答案为是。`annotation`中的`yes_no_answer`查看。
+3. `no`：表示该问题为是非问答题，且问题的答案为否。
+4. `passage`：`annotation` 中的`'passage_answer'` 查看。
+5. `min_answer`：表示该问题`annotation` 中的 `minimal_answer` 查看。
 
 **重要！！！！Tydi数据集采用byte索引标注，因此对于 Python 3，需要注意字符串索引的使用方式。Python 3 默认对文本采用character encoding**
 
@@ -206,12 +205,12 @@ if (include_unknowns < 0 or random.random() > include_unknowns):
 
 ### 7.1 **关于 canine 微调 tydi**
 
-**若采用 canine 仓库的 finetune设置，canine的实际训练量约是mBert的2倍多。**canine与其对标的mBert在训练数据集上存在差异。根据 mbert 的 tydi baseline [link](https://github.com/google-research-datasets/tydiqa/tree/master/baseline)，其数据处理方案与 canine 大同小异，仅是超参的数值不同。mbert 采用 128 的训练采样间隔，而canine使用 512 的采样间隔。但由于两者均**有 0.9 的概率忽略掉不含答案的样本**，因此经过测试与计算，mBert 平均每1篇文章能够生成4.27个样本，而 canine平均每一篇仅有约2.7个样本。 
+**若采用 canine 仓库的 finetune设置，canine的实际训练量约是mBert的2倍多。** canine与其对标的mBert在训练数据集上存在差异。根据 mbert 的 tydi baseline [link](https://github.com/google-research-datasets/tydiqa/tree/master/baseline)，其数据处理方案与 canine 大同小异，仅是超参的数值不同。mbert 采用 128 的训练采样间隔，而canine使用 512 的采样间隔。但由于两者均 **有 0.9 的概率忽略掉不含答案的样本** ，因此经过测试与计算，mBert 平均每1篇文章能够生成4.27个样本，而 canine平均每一篇仅有约2.7个样本。 
 
 尽管如此，微调时 mbert 仅用了 3个epoch，而 canine 微调了10个epoch。因此 canine 训练的样本量约是 mBert 的 `10*2.7/(4.27*3)=2.1` 倍。
 
-**由于采样间隔不同，验证时候两者对同一篇文章的预测次数也不同。**由于双方都采用所有预测中cls得分最高的结果，很难说 mBert 更紧凑及更多的预测能否为其带来效果上的提升。因此，论文中 canine-s 比 mBERT 高出1至2个百分点的结果，很可能是任务数据处理方案不同导致的。
+**由于采样间隔不同，验证时候两者对同一篇文章的预测次数也不同。** 由于双方都采用所有预测中cls得分最高的结果，很难说 mBert 更紧凑及更多的预测能否为其带来效果上的提升。因此，论文中 canine-s 比 mBERT 高出1至2个百分点的结果，很可能是任务数据处理方案不同导致的。
 
-> **采样间隔：**对于文章长度超过 `max_seq_length` 的样本，使用长度为 `max_seq_length` 的窗口进行滑动采样，每次滑动的距离`stride` 即为采样间隔。
+>   **采样间隔：** 对于文章长度超过 `max_seq_length` 的样本，使用长度为 `max_seq_length` 的窗口进行滑动采样，每次滑动的距离`stride` 即为采样间隔。
 
-**最后，canine较长的 max_length 更有利于 tydiqa 任务。**canine输入长度达到了2048，是mBERT的4倍。考虑采样时到有0.9的概率忽略掉不含答案的样本（若样本中仅包含了一部分答案，那么也算不含答案），因此canine的训练集中包含答案的样本会更多。此外在验证集中，答案被预测窗口切割的情况也会减少，从而使得canine在tydiqa中优势大一些。
+**最后，canine较长的 max_length 更有利于 tydiqa 任务。** canine输入长度达到了2048，是mBERT的4倍。考虑采样时到有0.9的概率忽略掉不含答案的样本（若样本中仅包含了一部分答案，那么也算不含答案），因此canine的训练集中包含答案的样本会更多。此外在验证集中，答案被预测窗口切割的情况也会减少，从而使得canine在tydiqa中优势大一些。

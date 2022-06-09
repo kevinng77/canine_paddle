@@ -20,24 +20,13 @@ google 官方对微调训练的配置集中在 [run_tydi_lib.py](https://github.
 
 ## 1. 模型架构
 
-tydiQA 任务使用的是 CanineQA 模型，需要在 Canine 基础上添加两个不同的 `dense` 来进行任务预测。参考官方代码：`tydi_modeling.py` [link](https://github.com/google-research/language/blob/master/language/canine/tydiqa/tydi_modeling.py)。
+TydiQA 任务使用的是 CanineQA 模型，需要在 Canine 基础上添加三个不同的 `dense` 来分别预测答案开始位置、答案结束位置、答案类型。参考官方代码：`tydi_modeling.py` [link](https://github.com/google-research/language/blob/master/language/canine/tydiqa/tydi_modeling.py)。
 
-本次复现使用 `CanineTydiQA` 模型与官方设置一致：线性层维度，初始化 weight 采用 0.02 截尾正太分布，bias采用 0。（仓库的`tydi_canine/tydi_modeling` 中查看）
+本次复现使用 `CanineTydiQA` 模型与官方设置一致：初始化 weight 采用 0.02 截尾正太分布，bias采用 0。
 
 ## 2. 超参
 
-论文中并没有微调的参数说明，但在官方给的repo readme中可以找到，[repo link](https://github.com/google-research/language/tree/master/language/canine/tydiqa)
-
-```shell
---max_seq_length=2048 \
---train_batch_size=512 \
---learning_rate=5e-5 \
---num_train_epochs=10 \
---warmup_proportion=0.1 \
-```
-
-除了`train_batch_size` 外，复现时**其他超参均与官方相同**。
-由于官方采用的 `batch_size` 过大，因此复现时使用了梯度累加的方式训练来模拟 512 的 `batch_size`。（如 `batch_size=16` 时，`accumulate_gradient_steps=32`
+由于官方论文中并没有提到微调的参数配置，因此本次复现参考并分别尝试了 [canine官方仓库](https://github.com/google-research/language/tree/master/language/canine/tydiqa#train-fine-tuning-canine) 的微调配置（`batch_size=512`，`epoch=10`, `lr=5e-5`），以及 [tydiqa 基线仓库]() 的微调配置（`batch_size=16`,`epoch=3`, `lr=5e-5`）。其中 `batch_size=512` 通过梯度累加来近似模拟。除了`train_batch_size` 外，复现时 **其他超参均与官方相同** 。
 
 ## 3. 训练模式
 
@@ -103,9 +92,8 @@ embedding 大致思路：
 4. 加上 position embedding，sentence type embedding 等。
 
 因此，embedding部分的输入为 unicode 整数，输出是维度为 `[batch_size, len_seq, d_model]`  的embedding矩阵。此处 `len_seq = n = 2048`，论文中embedding公式：
-$$
-e_{i} \leftarrow \bigoplus_{k}^{K} \operatorname{LOOKUP}_{k}\left(\mathcal{H}_{k}\left(x_{i}\right) \% B, d^{\prime}\right)
-$$
+
+![image-20220609204255117](img/note/image-20220609204255117.png)
 
 #### 6.1.2 **down sampling** 
 
@@ -122,12 +110,8 @@ $$
 + **strideconv**
 
 采用了kernel为 4的1d conv进行压缩。特殊的是CLS位置编码需要保留。输出 `h_down = [batch_size, len_seq/down_sampling_rate, d_model]`
-$$
-\begin{aligned}
-\mathbf{h}_{\text {init }} & \leftarrow \text { LOCALTRANSFORMER }_{1}(\mathbf{e}) \\
-\mathbf{h}_{\text {down }} & \leftarrow \operatorname{STRIDEDCONV}\left(\mathbf{h}_{\text {init }}, r\right)
-\end{aligned}
-$$
+
+![image-20220609204310890](img/note/image-20220609204310890.png)
 
 #### 6.1.3 Deep transformer stack
 
@@ -135,12 +119,8 @@ $$
 > 输出 `[batch_size, len_seq/down_sampling_rate, d_model]`
 
 深度编码模块。类似于bert的核心部分，即L层 transformer模块。对于非序列生成任务，文中直接使用CLS编码对应的隐状态进行预测。对于序列生成任务，还需要进行额外的解码步骤。该环节 `h_down` 规模同 down sampling，为 `[batch_size,len_seq/r, d]`
-$$
-\begin{aligned}
-\mathbf{h}_{\text {down }}^{\prime} & \leftarrow \text { TRANSFORMER }_{L}\left(\mathbf{h}_{\text {down }}\right) \\
-\mathbf{y}_{\text {cls }} &=\left[\mathbf{h}_{\text {down }}^{\prime}\right]_{0}
-\end{aligned}
-$$
+
+![image-20220609204324626](img/note/image-20220609204324626.png)
 
 #### 6.1.4 Upsampling
 
@@ -150,10 +130,6 @@ $$
 upsampling 采用 `torch.repeat_interleave` ，将 `h_down` 维度转化为 `len_seq, d`。而后与 `h_init`拼接得到 `[len_seq, 2d]` 矩阵，最后通过 kernel 为 4 的 1d CONV，映射为 `len_seq, d`
 
  最后使用1层传统的transformer，输出结果 $y_{seq}$ 维度为 `[batch_size, len_seq, d]`
-$$
-\begin{aligned}
-\mathbf{h}_{\text {up }} & \leftarrow \operatorname{CONV}\left(\mathbf{h}_{\text {init }} \oplus \mathbf{h}_{\text {down }}^{\prime}, w\right) \\
-\mathbf{y}_{\text {seq }} & \leftarrow \text { TRANSFORMER }_{1}\left(\mathbf{h}_{\mathrm{up}}\right)
-\end{aligned}
-$$
+
+![image-20220609204334679](img/note/image-20220609204334679.png)
 

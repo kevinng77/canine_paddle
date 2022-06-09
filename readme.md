@@ -35,7 +35,7 @@
 
 本次复现使用 tydiqa 数据集 [tydiqa 官方repo](https://github.com/google-research-datasets/tydiqa)，数据处理操作参考了 [canine/tydiqa 官方](https://github.com/google-research/language/tree/master/language/canine/tydiqa)。
 
-TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目以及对应的标注由人工实现。Tydi数据库中包含了 18万+篇 wiki 百科预料，20万+ 文章问题，共涉及 11 种不同的语言。Canine 在TydiQA 上实现了 Selection Passage Task 66% F1及 Minimum Answer Span Task 58% F1 的精度，比 TydiQA 基线（mBERT）高出约 2%。
+TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目以及对应的标注由人工实现。Tydi数据库中包含了 18万+篇 wiki 百科预料，20万+ 文章与问题对，共涉及 11 种不同的语言。Canine 在TydiQA 上实现了 Selection Passage Task 66% F1及 Minimum Answer Span Task 58% F1 的精度，比 TydiQA 基线（mBERT）高出约 2%。
 
 | TydiQA 任务                        | Canine 论文精度 | 本仓库复现精度 |
 | ---------------------------------- | --------------- | -------------- |
@@ -76,16 +76,15 @@ wget -O data/tydi/tydiqa-v1.0-dev.jsonl.gz https://storage.googleapis.com/tydiqa
 wget -O data/tydi/tydiqa-v1.0-train.jsonl.gz https://storage.googleapis.com/tydiqa/v1.0/tydiqa-v1.0-train.jsonl.gz
 ```
 
-【备选】若 `wget` 下载失败，也可以直接在 tydiqa 仓库 [Download the Dataset](https://github.com/google-research-datasets/tydiqa#download-the-dataset)中下载，放置在 `data/tydi` 目录下。
+【备选】可以直接在 tydiqa 仓库 [Download the Dataset](https://github.com/google-research-datasets/tydiqa#download-the-dataset)中下载，放置在 `data/tydi` 目录下。
 
 #### 3.2.2 处理数据集
 
-**注意：**由于 canine 仓库默认将 tydi 数据处理成 tensorflow 训练用格式，因此在复现时，个人更改了部分数据储存方式以适配 paddle 的训练，详细在 [tydi_canine](tydi_canine/readme.md) 文件夹中查看。处理好的数据将以 h5df 的格式储存。
+**注意：** 由于 canine 仓库默认将 tydi 数据处理成 tensorflow 训练用格式，因此在复现时，个人更改了部分数据储存方式以适配 paddle 的训练，详细的数据处理配置在 [tydi_canine](tydi_canine/readme.md) 文件夹中查看。
 
 **方案一：直接下载并解压处理好的训练和测试数据。**
 
-+ 链接：https://pan.baidu.com/s/1QVHh3cTztKAgAEEXUlqxWg?pwd=ia6i 
-+ 提取码：ia6i 
++ 链接：https://pan.baidu.com/s/1QVHh3cTztKAgAEEXUlqxWg?pwd=ia6i ；提取码：ia6i 
 
 下载后将两个 h5df 数据库放在 `data/tydi` 目录，如下：
 
@@ -143,7 +142,7 @@ mkdir -p data/torch_weight || echo "dir exist"
 wget -O data/torch_weight/pytorch_model.bin https://huggingface.co/google/canine-s/resolve/main/pytorch_model.bin
 ```
 
-【备选】下载失败可以在 [huggingface canine-s](https://huggingface.co/google/canine-s/tree/main) 网站手动下载，保存到 `data/torch_weight/pytorch_model.bin`
+【备选】可以在 [huggingface canine-s](https://huggingface.co/google/canine-s/tree/main) 网站手动下载，保存到 `data/torch_weight/pytorch_model.bin`
 
 + 权重转换：
 
@@ -156,12 +155,14 @@ python -m reproduction_utils.weight_convert_files.convert_weight \
 ```
 
 `--pytorch_checkpoint_path` ：torch权重路径。
+
 `--paddle_dump_path`：转换paddle权重输出路径。
+
 `--layer_mapping_file`：提供从torch layer对应到paddle layer的json文件
 
 #### 3.3.2 前向传导核对精度
 
-（执行改步需要安装torch与transformers）请在 CPU 环境下进行前项传导核对。
+（执行该步需要安装torch与transformers）请在 CPU 环境下进行前项传导核对。
 
 ```shell
 python -m reproduction_utils.token_check
@@ -194,13 +195,13 @@ seq_outputs, pooling_outputs = model(**pd_inputs)
 
 训练参数信息可在 `run_tydi.py` 中查看。关于训练的超参、优化器、loss等选择，请查看根目录下的 [note.md](note.md)。
 
-**注意：**由于官方论文中并没有提到微调的参数配置，因此本次复现参考并分别尝试了 [canine官方仓库](https://github.com/google-research/language/tree/master/language/canine/tydiqa#train-fine-tuning-canine) 的微调配置（`batch_size=512`，`epoch=10`, `lr=5e-5`），以及 [tydiqa 基线仓库]() 的微调配置（`batch_size=16`,`epoch=3`, `lr=5e-5`）。其中 `batch_size=512` 通过梯度累加来近似模拟。
+**注意：** 由于官方论文中并没有提到微调的参数配置，因此本次复现参考并分别尝试了 [canine官方仓库](https://github.com/google-research/language/tree/master/language/canine/tydiqa#train-fine-tuning-canine) 的微调配置（`batch_size=512`，`epoch=10`, `lr=5e-5`），以及 [tydiqa 基线仓库]() 的微调配置（`batch_size=16`,`epoch=3`, `lr=5e-5`）。其中 `batch_size=512` 通过梯度累加来近似模拟。
 
 实验中发现，10个epoch训练存在明显的过拟合，并且3个epoch的效果普遍比10个epoch高出2-3%。
 
 #### 4.2.1 模型训练
 
-单卡 V100 32G 训练需要8小时。
+单卡 V100 32G 训练需要8小时（多卡仅需改动`--selected_gpus` 为 `0,1,2,3`）。
 
 ```shell
 python -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
@@ -219,6 +220,7 @@ python -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
 ```
 
 `--train_input_dir`：存放 h5df 数据集的路径。
+
 `--output_dir`：输出模型权重、训练日志的文件夹路径。
 
 #### 4.2.2 tydi任务评测
@@ -226,7 +228,7 @@ python -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
 > 根据 [tydi 官方](https://github.com/google-research-datasets/tydiqa#evaluation) 指示进行评测。 
 >我们使用训练结束的权重进行测试，不考虑中间的checkout poing。
 
-**步骤一：**运行以下代码，生成任务评测文件 `pred.jsonl` ，由于 tydiQA任务的评估方式较为特殊，因此可以采用单卡或者多卡进行（多卡仅需改动`--selected_gpus` 为 `0,1,2,3`）：
+**步骤一：** 运行以下代码，生成任务评测文件 `pred.jsonl` ，由于 tydiQA任务的评估方式较为特殊，因此可以采用单卡或者多卡进行（多卡仅需改动`--selected_gpus` 为 `0,1,2,3`）：
 
 ```shell
 python3 -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
@@ -245,13 +247,16 @@ python3 -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
 ```
 
 `--state_dict_path`：存放微调权重的文件路径；若为文件夹路径，则会读取该文件夹下的 `tydi_seed_{seed}.pdparams` 权重。
+
 `--predict_file`：从官方下载的 `tydiqa-v1.0-dev.jsonl.gz` 文件路径。
+
 `--output_dir`：输出运行日志
+
 `--output_prediction_file`：输出 JSON 评估文件路径。
 
-**【备注】**  `pred.jsonl` 为格式满足 TydiQA 评测要求的文件，格式要求可以参考：[TydiQA 评测文件示例](https://github.com/google-research-datasets/tydiqa/blob/master/sample_prediction.jsonl)。
+**【备注】**   `pred.jsonl` 为格式满足 TydiQA 评测要求的文件，格式要求可以参考：[TydiQA 评测文件示例](https://github.com/google-research-datasets/tydiqa/blob/master/sample_prediction.jsonl)。
 
-**步骤二：**运行 tydi 官方跑分程序：将 `predictions_path` 对应到上一步中的 `pred.jsonl` 位置。
+**步骤二：** 运行 tydi 官方跑分程序：将 `predictions_path` 对应到上一步中的 `pred.jsonl` 位置。
 
 其中 Tydi 测评所需要的 `tydi_eval.py`, `eval_utils.py` 源于 [tydi 官方](https://github.com/google-research-datasets/tydiqa#evaluation)。
 
@@ -262,13 +267,14 @@ python3 official_tydi/tydi_eval.py \
 ```
 
 `--gold_path`：从官方下载的 `tydiqa-v1.0-dev.jsonl.gz` 文件路径。
+
 `--predictions_path`：步骤一种输出 JSON 评估文件的路径。
 
 得到运行结果如下图：
 
 <img src="img/readme/image-20220604104845332.png" alt="image-20220604104845332" style="zoom:50%;" />
 
-**步骤三：**清理过程文件
+**步骤三：** 清理过程文件
 
 在 `data/tydiqa_baseline_model/predict` 文件夹下会生成用于储存 logits 的 `results_gpu_*.pickle` 文件。测试结束后可以将其删除。
 
@@ -292,16 +298,16 @@ python3 official_tydi/tydi_eval.py \
 | ...还有两个正在测试 |            |                |                 |      |       |                   |                   |                                                              |
 | 平均                | -          | -              | -               |      | -     | 65.83%            | 55.27%            |                                                              |
 
-此外，以下展示了**所有**复现过程中进行过的其他微调结果，由于参数配置问题，他们不被计入论文复现精度，但仍可以为该模型在Tydi任务上的训练效果提供一些信息。
+此外，以下展示了 **所有** 复现过程中进行过的其他微调结果，由于参数配置问题，他们不被计入论文复现精度，但仍可以为该模型在Tydi任务上的训练效果提供一些信息。
 
-| 设备   | batch size | acc grad steps | 理论 batch size | seed | 混合精度训练 | epoch | warm up | TydiQA SelectP F1 | TydiQA MinSpan F1 | 微调权重链接                                                 |
-| ------ | ---------- | -------------- | --------------- | ---- | ------------ | ----- | ------- | ----------------- | ----------------- | ------------------------------------------------------------ |
-| V100*1 | 20         | 25             | 500             | 6    | 否           | 10    | 0.01    | 64.38%            | 53.73%            | [百度网盘](https://pan.baidu.com/s/18m-LmeYVDd1uEoa8bCe_rg?pwd=6fif) |
-| 3090*4 | 10         | 12             | 480             | 6    | 否           | 10    | 0.01    | 65.23%            | 53.49%            | [百度网盘](https://pan.baidu.com/s/1gX5BMeqPOexfe2jJ4KmLnA?pwd=gkmj) |
-| 3090*4 | 10         | 1              | 40              | 6    | 否           | 10    | 0.01    | 67.31%            | 53.11%            | [百度网盘](https://pan.baidu.com/s/1Ftc6sMvzv0nSUGecIvMpNA?pwd=nx29) |
-| V100*4 | 16         | 1              | 64              | 2022 | 是           | **3** | 0.01    | 67.26%            | 56.41%            | [百度网盘](https://pan.baidu.com/s/1TjlHj01lJLAxM-vDkCkZ1A?pwd=vdfu) |
-| V100*4 | 16         | 1              | 64              | 2020 | 是           | **3** | 0.01    | 67.29%            | 56.42%            | [百度网盘](https://pan.baidu.com/s/12AphDPk2OqDSK6ho1fw2Pw?pwd=scnt) |
-| -      | -          | -              | -               | -    | -            | -     | -       | **66.29%**        | **54.63%**        |                                                              |
+| 设备   | batch size | acc grad steps | 理论 batch size | seed | 混合精度训练 | epoch | warm up | TydiQA SelectP F1 | TydiQA MinSpan F1 |
+| ------ | ---------- | -------------- | --------------- | ---- | ------------ | ----- | ------- | ----------------- | ----------------- |
+| V100*1 | 20         | 25             | 500             | 6    | 否           | 10    | 0.01    | 64.38%            | 53.73%            |
+| 3090*4 | 10         | 12             | 480             | 6    | 否           | 10    | 0.01    | 65.23%            | 53.49%            |
+| 3090*4 | 10         | 1              | 40              | 6    | 否           | 10    | 0.01    | 67.31%            | 53.11%            |
+| V100*4 | 16         | 1              | 64              | 2022 | 是           | **3** | 0.01    | 67.26%            | 56.41%            |
+| V100*4 | 16         | 1              | 64              | 2020 | 是           | **3** | 0.01    | 67.29%            | 56.42%            |
+| -      | -          | -              | -               | -    | -            | -     | -       | **66.29%**        | **54.63%**        |
 
 **备注：**
 
