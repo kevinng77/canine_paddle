@@ -12,7 +12,7 @@
       - [3.2.1 下载Tydi数据集](#321-下载tydi数据集)
       - [3.2.2 处理数据集](#322-处理数据集)
     - [3.3 模型准备](#33-模型准备)
-      - [3.3.1 预训练权重准备](#331-预训练权重准备)
+      - [3.3.1 预训练权重转换](#331-预训练权重转换)
       - [3.3.2 前向传导核对精度](#332-前向传导核对精度)
   - [4 模型使用](#4-模型使用)
     - [4.1 使用案例](#41-使用案例)
@@ -26,7 +26,8 @@
   - [8.参考链接](#8参考链接)
 ## 1. 简介
 
-世界上存在海量的语言与词汇，在处理多语言场景时，传统预训练模型采用的 Vocab 和 Tokenization 方案难免会遇到 out of vocabulary 和 unkonw token 的情况。Canine 提供了 tokenization-free 的预训练模型方案，提高了模型在多语言任务下的能力。
+世界上存在海量的语言与词汇，在处理多语言场景时，传统预训练模型采用的 Vocab 和 Tokenization 方案难免会遇到 out of vocabulary 和 unkonw token 的情况。
+Canine 提供了 tokenization-free 的预训练模型方案，提高了模型在多语言任务下的能力。
 
 论文链接：[CANINE: Pre-training an Efficient Tokenization-Free Encoder for Language Representation](https://paperswithcode.com/paper/canine-pre-training-an-efficient-tokenization)
 参考repo：[google-research/language](https://github.com/google-research/language/tree/master/language/canine)，[huggingface/transformers](https://github.com/huggingface/transformers/tree/main/src/transformers/models/canine)。
@@ -35,12 +36,12 @@
 
 本次复现使用 tydiqa 数据集 [tydiqa 官方repo](https://github.com/google-research-datasets/tydiqa)，数据处理操作参考了 [canine/tydiqa 官方](https://github.com/google-research/language/tree/master/language/canine/tydiqa)。
 
-TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目以及对应的标注由人工实现。Tydi数据库中包含了 18万+篇 wiki 百科预料，20万+ 文章与问题对，共涉及 11 种不同的语言。Canine 在TydiQA 上实现了 Selection Passage Task 66% F1及 Minimum Answer Span Task 58% F1 的精度，比 TydiQA 基线（mBERT）高出约 2%。
+TydiQA 为多语言阅读理解数据集。Tydi数据库中包含了 18万+篇 wiki 百科语料，20万+ 文章与问题对，共涉及 11 种不同的语言。Canine 在TydiQA 上实现了 Selection Passage Task 66% F1及 Minimum Answer Span Task 58% F1 的精度，比 TydiQA 基线（mBERT）高出约 2%。
 
 | TydiQA 任务                        | Canine 论文精度 | 本仓库复现精度 |
 | ---------------------------------- | --------------- | -------------- |
-| Passage Selection Task (SELECTP)   | 66.0%           | 65.83%         |
-| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.27%         |
+| Passage Selection Task (SELECTP)   | 66.0%           | 65.92%         |
+| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.04%         |
 
 指标为macro F1；本仓库展示的复现结果为多次微调、预测、评估后的平均值。
 
@@ -80,7 +81,7 @@ wget -O data/tydi/tydiqa-v1.0-train.jsonl.gz https://storage.googleapis.com/tydi
 
 #### 3.2.2 处理数据集
 
-**注意：** 由于 canine 仓库默认将 tydi 数据处理成 tensorflow 训练用格式，因此在复现时，个人更改了部分数据储存方式以适配 paddle 的训练，详细的数据处理配置在 [tydi_canine](tydi_canine/readme.md) 文件夹中查看。
+**备注：** 详细的数据处理配置在 [tydi_canine](tydi_canine/readme.md) 文件夹中查看。
 
 **方案一：直接下载并解压处理好的训练和测试数据。**
 
@@ -125,15 +126,11 @@ python3 -m tydi_canine.prepare_tydi_data \
 
 ### 3.3 模型准备
 
-#### 3.3.1 预训练权重准备
+#### 3.3.1 预训练权重转换
 
-**方案一：下载转换好的预训练权重**
+paddle权重已上传到 [huggingface.co](https://huggingface.co/kevinng77/paddle-canine-s/tree/main)。使用 `model.from_pretrained('canine-s')` 时会自动下载。  
 
-+ 百度网盘链接：https://pan.baidu.com/s/1RO2MAyS3LHNHA5BwtDja9A  ；提取码：dk1t 
-
-请将下载好的权重放置于仓库中的 `data/paddle_weight/model_state.pdparams`
-
-**方案二：根据torch 权重进行预训练权重转换**
+**根据torch 权重进行预训练权重转换**
 
 + 下载 torch 权重到本地：
 
@@ -142,7 +139,7 @@ mkdir -p data/torch_weight || echo "dir exist"
 wget -O data/torch_weight/pytorch_model.bin https://huggingface.co/google/canine-s/resolve/main/pytorch_model.bin
 ```
 
-【备选】可以在 [huggingface canine-s](https://huggingface.co/google/canine-s/tree/main) 网站手动下载，保存到 `data/torch_weight/pytorch_model.bin`
+【备选】或在 [huggingface canine-s](https://huggingface.co/google/canine-s/tree/main) 网站手动下载，保存到 `data/torch_weight/pytorch_model.bin`
 
 + 权重转换：
 
@@ -230,6 +227,8 @@ python -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
 
 **步骤一：** 运行以下代码，生成任务评测文件 `pred.jsonl` ，由于 tydiQA任务的评估方式较为特殊，因此可以采用单卡或者多卡进行（多卡仅需改动`--selected_gpus` 为 `0,1,2,3`）：
 
+**【备注】**   `pred.jsonl` 为格式满足 TydiQA 评测要求的文件，格式要求可以参考：[TydiQA 评测文件示例](https://github.com/google-research-datasets/tydiqa/blob/master/sample_prediction.jsonl)。
+
 ```shell
 python3 -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
   --state_dict_path=data/tydiqa_baseline_model/train \
@@ -253,8 +252,6 @@ python3 -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
 `--output_dir`：输出运行日志
 
 `--output_prediction_file`：输出 JSON 评估文件路径。
-
-**【备注】**   `pred.jsonl` 为格式满足 TydiQA 评测要求的文件，格式要求可以参考：[TydiQA 评测文件示例](https://github.com/google-research-datasets/tydiqa/blob/master/sample_prediction.jsonl)。
 
 **步骤二：** 运行 tydi 官方跑分程序：将 `predictions_path` 对应到上一步中的 `pred.jsonl` 位置。
 
@@ -284,19 +281,19 @@ python3 official_tydi/tydi_eval.py \
 
 | TydiQA 任务                        | Canine 论文精度 | 本仓库复现精度 |
 | ---------------------------------- | --------------- | -------------- |
-| Passage Selection Task (SELECTP)   | 66.0%           | 65.83%         |
-| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.27%         |
+| Passage Selection Task (SELECTP)   | 66.0%           | 65.92%         |
+| Minimal Answer Span Task (MINSPAN) | 52.8%           | 55.04%         |
 
 各次微调的日志、评估文件等可以在 `logs` 文件夹中查看。训练结果整理：
 
-|                     | batch size | acc grad steps | 理论 batch size | seed | epoch | TydiQA SelectP F1 | TydiQA MinSpan F1 | 微调权重链接                                                 |
-| ------------------- | ---------- | -------------- | --------------- | ---- | ----- | ----------------- | ----------------- | ------------------------------------------------------------ |
-| V100                | 16         | 1              | 16              | 2021 | 3     | 66.01%            | 55.77%            | [百度网盘](https://pan.baidu.com/s/1zlGq0alZB04vbpl1lS77uw?pwd=xldb) |
-| V100                | 16         | 1              | 16              | 666  | 3     | 67.02%            | 56.17%            | [百度网盘](https://pan.baidu.com/s/1jr8bh2-BKX-DRtclkGl5xA?pwd=wyus) |
-| v100                | 16         | 32             | 512             | 5121 | 10    | 64.35%            | 53.58%            |                                                              |
-| 3090*4              | 14         | 9              | 504             | 5123 | 4     | 65.93%            | 55.60%            |                                                              |
-| ...还有两个正在测试 |            |                |                 |      |       |                   |                   |                                                              |
-| 平均                | -          | -              | -               |      | -     | 65.83%            | 55.27%            |                                                              |
+|        | batch size | acc grad steps | 理论 batch size | seed | epoch | TydiQA SelectP F1 | TydiQA MinSpan F1 | 微调权重链接                                                 |
+| ------ | ---------- | -------------- | --------------- | ---- | ----- | ----------------- | ----------------- | ------------------------------------------------------------ |
+| V100   | 16         | 1              | 16              | 2021 | 3     | 66.01%            | 55.77%            | [百度网盘](https://pan.baidu.com/s/1zlGq0alZB04vbpl1lS77uw?pwd=xldb) |
+| V100   | 16         | 1              | 16              | 666  | 3     | 67.02%            | 56.17%            | [百度网盘](https://pan.baidu.com/s/1jr8bh2-BKX-DRtclkGl5xA?pwd=wyus) |
+| v100   | 16         | 32             | 512             | 5121 | 10    | 64.35%            | 53.58%            |                                                              |
+| v100   | 16         | 32             | 512             | 555  | 4     | 66.29%            | 54.12%            |                                                              |
+| 3090*4 | 14         | 9              | 504             | 5123 | 4     | 65.93%            | 55.60%            |                                                              |
+| -      | -          | -              | -               |      | 平均  | 65.92%            | 55.04%            |                                                              |
 
 此外，以下展示了 **所有** 复现过程中进行过的其他微调结果，由于参数配置问题，他们不被计入论文复现精度，但仍可以为该模型在Tydi任务上的训练效果提供一些信息。
 
@@ -307,7 +304,7 @@ python3 official_tydi/tydi_eval.py \
 | 3090*4 | 10         | 1              | 40              | 6    | 否           | 10    | 0.01    | 67.31%            | 53.11%            |
 | V100*4 | 16         | 1              | 64              | 2022 | 是           | **3** | 0.01    | 67.26%            | 56.41%            |
 | V100*4 | 16         | 1              | 64              | 2020 | 是           | **3** | 0.01    | 67.29%            | 56.42%            |
-| -      | -          | -              | -               | -    | -            | -     | -       | **66.29%**        | **54.63%**        |
+| -      | -          | -              | -               | -    | -            | -     | 平均    | **66.29%**        | **54.63%**        |
 
 **备注：**
 

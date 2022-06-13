@@ -74,6 +74,7 @@ class CaninePretrainedModel(PretrainedModel):
             "hidden_dropout": 0.1,
             "encoder_ffn_dim": 3072,
             "init_std": 0.02,
+            'model_max_length': 2048
         },
     }
     resource_files_names = {"model_state": "model_state.pdparams"}
@@ -81,7 +82,7 @@ class CaninePretrainedModel(PretrainedModel):
         "model_state": {
             "canine-s":
             # TODO edit weight path
-                "data/paddle_weight/model_state.pdparams",
+                "https://huggingface.co/kevinng77/paddle-canine-s/resolve/main/model_state.pdparams",
         }
     }
 
@@ -208,9 +209,9 @@ class CanineEmbeddings(nn.Layer):
                 inputs_embeds=None,
                 ):
         if input_ids is not None:
-            input_shape = input_ids.shape
+            input_shape = paddle.shape(input_ids)
         else:
-            input_shape = inputs_embeds.shape[:-1]
+            input_shape = paddle.shape(inputs_embeds)[:-1]
 
         seq_length = input_shape[1]
 
@@ -443,6 +444,7 @@ class CanineAttention(nn.Layer):
                  attend_from_chunk_stride=128,
                  attend_to_chunk_width=128,
                  attend_to_chunk_stride=128,
+                 max_seq_length=2048
                  ):
         super(CanineAttention, self).__init__()
 
@@ -470,6 +472,49 @@ class CanineAttention(nn.Layer):
         self.attend_from_chunk_stride = attend_from_chunk_stride
         self.attend_to_chunk_width = attend_to_chunk_width
         self.attend_to_chunk_stride = attend_to_chunk_stride
+        self.chunks_iter = None
+        if self.local:
+            self.chunks_iter = self.get_chunks(max_seq_length)
+
+    def get_chunks(self, max_seq_length):
+        """
+        Generate chunks for performing single local attention.
+        """
+        from_seq_length = to_seq_length = max_seq_length
+        # Create chunks (windows) that we will attend *from* and then concatenate them.
+        from_chunks_start, from_chunks_end = [], []
+        if self.first_position_attends_to_all:
+            from_chunks_start.append(0)
+            from_chunks_end.append(1)
+            # We must skip this first position so that our output sequence is the
+            # correct length (this matters in the *from* sequence only).
+            from_start = 1
+        else:
+            from_start = 0
+
+        for chunk_start in range(from_start, from_seq_length, self.attend_from_chunk_stride):
+            chunk_end = min(from_seq_length, chunk_start + self.attend_from_chunk_width)
+            from_chunks_start.append(chunk_start)
+            from_chunks_end.append(chunk_end)
+
+        # Determine the chunks (windows) that will will attend *to*.
+        to_chunks_start, to_chunks_end = [], []
+        if self.first_position_attends_to_all:
+            to_chunks_start.append(0)
+            to_chunks_end.append(to_seq_length)
+
+        for chunk_start in range(0, to_seq_length, self.attend_to_chunk_stride):
+            chunk_end = min(to_seq_length, chunk_start + self.attend_to_chunk_width)
+            to_chunks_start.append(chunk_start)
+            to_chunks_end.append(chunk_end)
+        if len(from_chunks_start) != len(to_chunks_start):
+            raise ValueError(
+                f"Expected to have same number of `from_chunks` ({from_chunks_start}) and "
+                f"`to_chunks` ({to_chunks_start}). Check strides."
+            )
+        return paddle.concat(
+            list(map(paddle.to_tensor, [[from_chunks_start], [from_chunks_end], [to_chunks_start], [to_chunks_end]])),
+            axis=0).T
 
     def forward(self,
                 hidden_states,
@@ -482,39 +527,17 @@ class CanineAttention(nn.Layer):
                                               head_mask=head_mask)
         else:
             # Perform Single Local Attention
-            from_seq_length = to_seq_length = hidden_states.shape[1]
+            batch_size, from_seq_length, hidden_size = hidden_states.shape
             from_tensor = to_tensor = hidden_states
 
-            # Create chunks (windows) that we will attend *from* and then concatenate them.
-            from_chunks = []
-            if self.first_position_attends_to_all:
-                from_chunks.append((0, 1))
-                # We must skip this first position so that our output sequence is the
-                # correct length (this matters in the *from* sequence only).
-                from_start = 1
-            else:
-                from_start = 0
-            for chunk_start in range(from_start, from_seq_length, self.attend_from_chunk_stride):
-                chunk_end = min(from_seq_length, chunk_start + self.attend_from_chunk_width)
-                from_chunks.append((chunk_start, chunk_end))
-
-            # Determine the chunks (windows) that will will attend *to*.
-            to_chunks = []
-            if self.first_position_attends_to_all:
-                to_chunks.append((0, to_seq_length))
-            for chunk_start in range(0, to_seq_length, self.attend_to_chunk_stride):
-                chunk_end = min(to_seq_length, chunk_start + self.attend_to_chunk_width)
-                to_chunks.append((chunk_start, chunk_end))
-
-            if len(from_chunks) != len(to_chunks):
-                raise ValueError(
-                    f"Expected to have same number of `from_chunks` ({from_chunks}) and "
-                    f"`to_chunks` ({from_chunks}). Check strides."
-                )
-
             # compute attention scores for each pair of windows and concatenate the results.
-            attention_output_chunks = []
-            for (from_start, from_end), (to_start, to_end) in zip(from_chunks, to_chunks):
+            # attention_output_chunks = []
+
+            attention_output = paddle.zeros((batch_size, from_seq_length, hidden_size))
+            for chunk_pos in self.chunks_iter:
+                from_start, from_end, to_start, to_end = chunk_pos
+                if from_start >= from_seq_length:
+                    break
                 from_tensor_chunk = from_tensor[:, from_start:from_end, :]
                 to_tensor_chunk = to_tensor[:, to_start:to_end, :]
                 # `attention_mask`: <float>[batch_size, from_seq, to_seq]
@@ -535,9 +558,10 @@ class CanineAttention(nn.Layer):
                                                          attn_mask=attention_mask_chunk,
                                                          head_mask=head_mask,
                                                          )
-                attention_output_chunks.append(attention_outputs_chunk)
-
-            attention_output = paddle.concat(attention_output_chunks, axis=1)
+                # TODO: this could avoid dynamic to static bug, but hurts speed
+                attention_output[:, to_start:to_end, :] = attention_outputs_chunk
+                # attention_output_chunks.append(attention_outputs_chunk)
+            # attention_output = paddle.concat(attention_output_chunks, axis=1)
 
         attention_output = self.dense(attention_output)
         attention_output = self.dropout(attention_output)
@@ -568,6 +592,7 @@ class CanineLayer(nn.Layer):
                  attend_from_chunk_stride=128,
                  attend_to_chunk_width=128,
                  attend_to_chunk_stride=128,
+                 max_seq_length=2048
                  ):
         super(CanineLayer, self).__init__()
         self.seq_len_dim = 1
@@ -583,6 +608,7 @@ class CanineLayer(nn.Layer):
                                          attend_from_chunk_stride=attend_from_chunk_stride,
                                          attend_to_chunk_width=attend_to_chunk_width,
                                          attend_to_chunk_stride=attend_to_chunk_stride,
+                                         max_seq_length=max_seq_length
                                          )
 
         self.ffn = nn.Linear(in_features=hidden_size, out_features=ffn_dim)
@@ -639,6 +665,7 @@ class CanineEncoder(nn.Layer):
                  attend_from_chunk_stride=128,
                  attend_to_chunk_width=128,
                  attend_to_chunk_stride=128,
+                 max_seq_length=2048
                  ):
 
         super(CanineEncoder, self).__init__()
@@ -658,6 +685,7 @@ class CanineEncoder(nn.Layer):
                 attend_from_chunk_stride=attend_from_chunk_stride,
                 attend_to_chunk_width=attend_to_chunk_width,
                 attend_to_chunk_stride=attend_to_chunk_stride,
+                max_seq_length=max_seq_length
             )
             for _ in range(num_encoder_layers)])
 
@@ -813,6 +841,8 @@ class CanineModel(CaninePretrainedModel):
             Whether to add pooling layer after encoder for classification task. Defaults to `True`.
         local_transformer_stride (int, optional):
             The stride size for performing single local attention in `CanineSelfAttention`. Default to `128`.
+        model_max_length (int, optional):
+            The max sequence length of model input, Default to `2048`.
     """
 
     def __init__(self,
@@ -836,6 +866,7 @@ class CanineModel(CaninePretrainedModel):
                  upsampling_kernel_size=4,
                  add_pooling_layer=True,
                  local_transformer_stride=128,
+                 model_max_length=2048,
                  ):
         super(CanineModel, self).__init__()
         self.init_std = init_std
@@ -870,6 +901,7 @@ class CanineModel(CaninePretrainedModel):
             attend_from_chunk_stride=local_transformer_stride,
             attend_to_chunk_width=local_transformer_stride,
             attend_to_chunk_stride=local_transformer_stride,
+            max_seq_length=model_max_length
         )
 
         # stride conv layer for down sampling
@@ -965,7 +997,7 @@ class CanineModel(CaninePretrainedModel):
         # n elements (n < `downsampling_rate`), i.e. the remainder of floor
         # division. We do this by repeating the last molecule a few extra times.
         last_molecule = molecules[:, -1:, :]
-        remainder_length = paddle.mod(paddle.to_tensor(char_seq_length), paddle.to_tensor(rate)).item()
+        remainder_length = paddle.mod(paddle.to_tensor(char_seq_length), paddle.to_tensor(rate))
         remainder_repeated = repeat_interleave(
             last_molecule,
             repeats=remainder_length + rate,
@@ -976,8 +1008,8 @@ class CanineModel(CaninePretrainedModel):
     def forward(
             self,
             input_ids=None,
-            attention_mask=None,
             token_type_ids=None,
+            attention_mask=None,
             position_ids=None,
             head_mask=None,  # TODO check use or not
             inputs_embeds=None,

@@ -1,7 +1,7 @@
 
 # TydiQA 数据处理与考虑
 
-TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目以及对应的标注由人工实现。Tydi数据库中包含了 18万+篇 wiki 百科预料，20万+ 文章问题，共涉及 11 种不同的语言。
+TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目以及对应的标注由人工实现。Tydi数据库中包含了 18万+篇 wiki 百科语料，20万+ 文章问题，共涉及 11 种不同的语言。
 
 ## 目录
 - [TydiQA 数据处理与考虑](#tydiqa-数据处理与考虑)
@@ -16,7 +16,9 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
     - [7.1 **关于 canine 微调 tydi**](#71-关于-canine-微调-tydi)
 ## 1. 仓库预览
 
-本仓库数据处理流程与 canine [论文仓库](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa) 一致，以下文件复制于 [canine/tydiqa](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa)，除注释和代码缩紧外无更改：
+本仓库数据处理流程与 canine [论文仓库](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa) 一致。
+
+以下文件复制于 [canine/tydiqa](https://github.com/google-research/language/tree/b76d2230156abec5c8d241073cdccbb36f66d1de/language/canine/tydiqa)，除注释和代码缩进外无更改：
 
 + `tydi_tokenization_interface.py`：Tydi 官方 Tokenizer 模板（接口）。
 
@@ -78,6 +80,8 @@ TydiQA 为多语言阅读理解数据集。文章从wiki百科中爬取，题目
 ### 5. 1总结
 
 使用大小为 `max_seq_length=2048` 的滑动窗口对每篇文章进行样本抽取。滑动的间隔 `doc_stride` 为 `512`。即一篇3000字的文章可以生成 `[0:2048],[512:2560],[2560:3000]` 三个样本。
+
+输入格式为：`[CLS] + [Q] + question + [SEP] + [passage_id] + article + [SEP]`；`[Q]`, `[passage_id]` 为 tydi 任务专用编码。
 
 ### 5. 2数据处理细节
 
@@ -205,12 +209,17 @@ if (include_unknowns < 0 or random.random() > include_unknowns):
 
 ### 7.1 **关于 canine 微调 tydi**
 
-**若采用 canine 仓库的 finetune设置，canine的实际训练量约是mBert的2倍多。** canine与其对标的mBert在训练数据集上存在差异。根据 mbert 的 tydi baseline [link](https://github.com/google-research-datasets/tydiqa/tree/master/baseline)，其数据处理方案与 canine 大同小异，仅是超参的数值不同。mbert 采用 128 的训练采样间隔，而canine使用 512 的采样间隔。但由于两者均 **有 0.9 的概率忽略掉不含答案的样本** ，因此经过测试与计算，mBert 平均每1篇文章能够生成4.27个样本，而 canine平均每一篇仅有约2.7个样本。 
++ **若采用 canine 仓库的 finetune设置，canine的实际训练量约是mBert的2倍多。** canine与其对标的mBert在训练数据集上存在差异。根据 mbert 的 tydi baseline [link](https://github.com/google-research-datasets/tydiqa/tree/master/baseline)，其数据处理方案与 canine 大同小异，仅是超参的数值不同。
 
-尽管如此，微调时 mbert 仅用了 3个epoch，而 canine 微调了10个epoch。因此 canine 训练的样本量约是 mBert 的 `10*2.7/(4.27*3)=2.1` 倍。
+| Tydi任务模型   | 采样间隔 | epoch | 平均每篇文章截取的样本数 | 文章数量 | 实际训练量 |
+| -------------- | -------- | ----- | ------------------------ | -------- | ---------- |
+| canine-s       | 128      | 10    | 2.7                      | 18万     | 27*18万    |
+| mBert Baseline | 512      | 3     | 4.27                     | 18万     | 12.81*18万 |
 
-**由于采样间隔不同，验证时候两者对同一篇文章的预测次数也不同。** 由于双方都采用所有预测中cls得分最高的结果，很难说 mBert 更紧凑及更多的预测能否为其带来效果上的提升。因此，论文中 canine-s 比 mBERT 高出1至2个百分点的结果，很可能是任务数据处理方案不同导致的。
+（ **采样间隔：** 对于文章长度超过 `max_seq_length` 的样本，使用长度为 `max_seq_length` 的窗口进行滑动采样，每次滑动的距离`stride` 即为采样间隔。）
 
->   **采样间隔：** 对于文章长度超过 `max_seq_length` 的样本，使用长度为 `max_seq_length` 的窗口进行滑动采样，每次滑动的距离`stride` 即为采样间隔。
+由于两者均 **有 0.9 的概率忽略掉不含答案的样本** ，因此经过测试与计算，mBert 平均每1篇文章能够生成4.27个样本，而 canine平均每一篇仅有约2.7个样本。 尽管如此，微调时 mbert 仅用了 3个epoch，而 canine 微调了10个epoch。因此 canine 训练的样本量约是 mBert 的 `10*2.7/(4.27*3)=2.1` 倍。
 
-**最后，canine较长的 max_length 更有利于 tydiqa 任务。** canine输入长度达到了2048，是mBERT的4倍。考虑采样时到有0.9的概率忽略掉不含答案的样本（若样本中仅包含了一部分答案，那么也算不含答案），因此canine的训练集中包含答案的样本会更多。此外在验证集中，答案被预测窗口切割的情况也会减少，从而使得canine在tydiqa中优势大一些。
++ **由于采样间隔不同，验证时候两者对同一篇文章的预测次数也不同。** 由于双方都采用所有预测中cls得分最高的结果，很难说 mBert 更紧凑及更多的预测能否为其带来效果上的提升。因此，论文中 canine-s 比 mBERT 高出1至2个百分点的结果，很可能是任务数据处理方案不同导致的。
+
++ **最后，canine较长的 max_length 更有利于 tydiqa 任务。** canine输入长度达到了2048，是mBERT的4倍。考虑采样时到有0.9的概率忽略掉不含答案的样本（若样本中仅包含了一部分答案，那么也算不含答案），因此canine的训练集中包含答案的样本会更多。此外在验证集中，答案被预测窗口切割的情况也会减少，从而使得canine在tydiqa中优势大一些。
