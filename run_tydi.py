@@ -29,7 +29,7 @@ def get_args():
                         help="Precomputed input ids for training.")
     parser.add_argument("--state_dict_path",
                         help="model state dict path i.e. model.pdparams.")
-    parser.add_argument("--checkout_steps", type=int, default=4000, help="number of steps for save checkout point")
+    parser.add_argument("--checkout_steps", type=int, default=40000, help="number of steps for save checkout point")
     parser.add_argument("--predict_file",
                         help="TyDi json for predictions. E.g., dev-v1.1.jsonl.gz or test-v1.1.jsonl.gz. "
                              "Used only for `--do_predict`.")
