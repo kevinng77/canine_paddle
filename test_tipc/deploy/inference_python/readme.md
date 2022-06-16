@@ -24,11 +24,15 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 ### 2.2 模型动转静导出
 
-使用下面的命令完成`canine-s`模型的动转静导出。
+以下命令请在 `canine_paddle/test_tipc` 文件夹下运行。
+
+使用下面的命令完成`canine-s`模型的动转静导出，其中 `canine-s-tydiqa-finetuned` 为在 TydiQA 任务上微调后的权重 。
 
 ```shell
-python -m tools.export_model --save_inference_dir=./canine_infer --model_path=./canine_tydi_qa
+python tools/export_model.py --save_inference_dir=./canine_infer --model_path=canine-s-tydiqa-finetuned
 ```
+
+若出现 `ValueError: Function: forward doesn't exist in the Module transformed from AST.` 错误，请重新尝试执行以上代码。
 
 最终在`canine_infer/`文件夹下会生成下面的3个文件。
 
@@ -42,7 +46,7 @@ canine_infer
 ### 2.3 模型推理
 
 ```shell\
-python -m deploy.inference_python.infer --model_dir=./canine_infer
+python deploy/inference_python/infer.py --model_dir=./canine_infer
 ```
 
 对于下面的文章和问题进行阅读理解预测：
@@ -62,4 +66,4 @@ test_question = "Who was the first Nobel prize winner for Literature?"
 >>> Answer Text: Sully Prudhomme of France, score: 4.677705764770508
 ```
 
-表示对于问题 "Who was the first Nobel prize winner for Literature?" 的答案是 "Sully Prudhomme of France"，置信度为 4.678。该结果与基于训练引擎的结果完全一致。
+表示对于问题 "Who was the first Nobel prize winner for Literature?" 的答案是 "Sully Prudhomme of France"，置信度为 4.6777。该结果与基于训练引擎的cpu预测结果仅相差 `1e-6`。

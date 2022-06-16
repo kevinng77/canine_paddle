@@ -392,8 +392,6 @@ class CanineSelfAttention(nn.MultiHeadAttention):
             x=q, y=k, transpose_y=True, alpha=self.head_dim ** -0.5)
 
         if attn_mask is not None:
-            if attn_mask.ndim == 3:
-                attn_mask = paddle.unsqueeze(attn_mask, axis=1)
             attn_mask = _convert_attention_mask(attn_mask, product.dtype)
             product = product + attn_mask
 
@@ -472,13 +470,13 @@ class CanineAttention(nn.Layer):
         self.attend_from_chunk_stride = attend_from_chunk_stride
         self.attend_to_chunk_width = attend_to_chunk_width
         self.attend_to_chunk_stride = attend_to_chunk_stride
-        self.chunks_iter = None
+
         if self.local:
             self.chunks_iter = self.get_chunks(max_seq_length)
 
     def get_chunks(self, max_seq_length):
         """
-        Generate chunks for performing single local attention.
+        Generate chunks position index for performing single local attention.
         """
         from_seq_length = to_seq_length = max_seq_length
         # Create chunks (windows) that we will attend *from* and then concatenate them.
@@ -492,28 +490,33 @@ class CanineAttention(nn.Layer):
         else:
             from_start = 0
 
-        for chunk_start in range(from_start, from_seq_length, self.attend_from_chunk_stride):
+        chunk_start = from_start
+        while chunk_start < from_seq_length:
             chunk_end = min(from_seq_length, chunk_start + self.attend_from_chunk_width)
             from_chunks_start.append(chunk_start)
             from_chunks_end.append(chunk_end)
+            chunk_start = chunk_start + self.attend_from_chunk_stride
 
-        # Determine the chunks (windows) that will will attend *to*.
+        # Determine the chunks (windows) that will attend *to*.
         to_chunks_start, to_chunks_end = [], []
         if self.first_position_attends_to_all:
             to_chunks_start.append(0)
             to_chunks_end.append(to_seq_length)
 
-        for chunk_start in range(0, to_seq_length, self.attend_to_chunk_stride):
+        chunk_start = 0
+        while chunk_start < to_seq_length:
             chunk_end = min(to_seq_length, chunk_start + self.attend_to_chunk_width)
             to_chunks_start.append(chunk_start)
             to_chunks_end.append(chunk_end)
+            chunk_start = chunk_start + self.attend_to_chunk_width
+
         if len(from_chunks_start) != len(to_chunks_start):
             raise ValueError(
                 f"Expected to have same number of `from_chunks` ({from_chunks_start}) and "
                 f"`to_chunks` ({to_chunks_start}). Check strides."
             )
         return paddle.concat(
-            list(map(paddle.to_tensor, [[from_chunks_start], [from_chunks_end], [to_chunks_start], [to_chunks_end]])),
+            list(map(paddle.assign, [[from_chunks_start], [from_chunks_end], [to_chunks_start], [to_chunks_end]])),
             axis=0).T
 
     def forward(self,
@@ -527,9 +530,10 @@ class CanineAttention(nn.Layer):
                                               head_mask=head_mask)
         else:
             # Perform Single Local Attention
-            batch_size, from_seq_length, hidden_size = hidden_states.shape
-            from_tensor = to_tensor = hidden_states
+            batch_size, from_seq_length, hidden_size = paddle.shape(hidden_states)
 
+            # TODO: this is to avoid dynamic to static error: tensor not init
+            tensor_for_slice = paddle.assign(hidden_states)
             # compute attention scores for each pair of windows and concatenate the results.
             # attention_output_chunks = []
 
@@ -538,17 +542,17 @@ class CanineAttention(nn.Layer):
                 from_start, from_end, to_start, to_end = chunk_pos
                 if from_start >= from_seq_length:
                     break
-                from_tensor_chunk = from_tensor[:, from_start:from_end, :]
-                to_tensor_chunk = to_tensor[:, to_start:to_end, :]
+                from_tensor_chunk = tensor_for_slice[:, from_start:from_end, :]
+                to_tensor_chunk = tensor_for_slice[:, to_start:to_end, :]
                 # `attention_mask`: <float>[batch_size, from_seq, to_seq]
                 # `attention_mask_chunk`: <float>[batch_size, from_seq_chunk, to_seq_chunk]
-                attention_mask_chunk = attn_mask[:, from_start:from_end, to_start:to_end]
+                attention_mask_chunk = attn_mask[:, :, from_start:from_end, to_start:to_end]
                 if self.always_attend_to_first_position:
-                    cls_attention_mask = attn_mask[:, from_start:from_end, 0:1]
+                    cls_attention_mask = attn_mask[:, :, from_start:from_end, 0:1]
                     attention_mask_chunk = paddle.concat([cls_attention_mask, attention_mask_chunk],
-                                                         axis=2)
+                                                         axis=-1)
 
-                    cls_position = to_tensor[:, 0:1, :]
+                    cls_position = tensor_for_slice[:, 0:1, :]
                     to_tensor_chunk = paddle.concat([cls_position, to_tensor_chunk],
                                                     axis=1)
 
@@ -558,7 +562,7 @@ class CanineAttention(nn.Layer):
                                                          attn_mask=attention_mask_chunk,
                                                          head_mask=head_mask,
                                                          )
-                # TODO: this could avoid dynamic to static bug, but hurts speed
+                # TODO: this could avoid dynamic to static model convert bug, but hurts speed
                 attention_output[:, to_start:to_end, :] = attention_outputs_chunk
                 # attention_output_chunks.append(attention_outputs_chunk)
             # attention_output = paddle.concat(attention_output_chunks, axis=1)
@@ -720,10 +724,10 @@ class CanineEncoder(nn.Layer):
         return output if cache is None else (output, new_caches)
 
 
-def get_extended_attention_mask(attention_mask, ):
-    if attention_mask.dim() == 3:
+def get_extended_attention_mask(attention_mask):
+    if attention_mask.ndim == 3:
         extended_attention_mask = attention_mask.unsqueeze(1)
-    elif attention_mask.dim() == 2:
+    elif attention_mask.ndim == 2:
         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
     else:
         raise ValueError(
@@ -733,21 +737,20 @@ def get_extended_attention_mask(attention_mask, ):
     return extended_attention_mask
 
 
-# Copied from transformers/models/canine/modeling_canine.py _create_3d_attention_mask_from_input_mask
-def _create_3d_attention_mask_from_input_mask(from_tensor, to_mask):
+def _get_char_attention_mask(from_tensor, to_mask):
     """
-    Create 3D attention mask from a 2D tensor mask.
+    Create 4D attention mask from a 2D tensor mask.
 
     Args:
         from_tensor: 2D or 3D Tensor of shape [batch_size, from_seq_length, ...].
-        to_mask: int32 Tensor of shape [batch_size, to_seq_length].
+        to_mask: Tensor of shape [batch_size, to_seq_length].
 
     Returns:
         float Tensor of shape [batch_size, from_seq_length, to_seq_length].
     """
-    batch_size, from_seq_length = from_tensor.shape[0], from_tensor.shape[1]
+    batch_size, from_seq_length = paddle.shape(from_tensor)[0], paddle.shape(from_tensor)[1]
 
-    to_seq_length = to_mask.shape[1]
+    to_seq_length = paddle.shape(to_mask)[1]
 
     to_mask = paddle.reshape(to_mask, (batch_size, 1, to_seq_length))
 
@@ -758,25 +761,22 @@ def _create_3d_attention_mask_from_input_mask(from_tensor, to_mask):
     # Here we broadcast along two dimensions to create the mask.
     mask = broadcast_ones * to_mask
 
-    return mask
+    return get_extended_attention_mask(mask)
 
 
-# Copied from transformers/models/canine/modeling_canine.py _downsample_attention_mask
-def _downsample_attention_mask(char_attention_mask, downsampling_rate):
-    """Downsample 2D character attention mask to 2D molecule attention mask using MaxPool1d layer."""
+def _get_downsample_attention_mask(char_attention_mask, downsampling_rate=4):
+    """Downsample 2D character attention mask to 4D molecule attention mask using MaxPool1d layer."""
 
-    # first, make char_attention_mask 3D by adding a channel dim
-    batch_size, char_seq_len = char_attention_mask.shape
+    batch_size, char_seq_len = paddle.shape(char_attention_mask)
     poolable_char_mask = paddle.reshape(char_attention_mask, (batch_size, 1, char_seq_len))
 
-    # next, apply MaxPool1d to get pooled_molecule_mask of shape (batch_size, 1, mol_seq_len)
+    # apply MaxPool1d to get pooled_molecule_mask of shape (batch_size, 1, mol_seq_len)
     pooled_molecule_mask = nn.MaxPool1D(kernel_size=downsampling_rate,
                                         stride=downsampling_rate)(
         paddle.cast(poolable_char_mask, dtype_float)
     )
-    # finally, squeeze to get tensor of shape (batch_size, mol_seq_len)
-    molecule_attention_mask = paddle.squeeze(pooled_molecule_mask, axis=-1)
-    return molecule_attention_mask
+
+    return get_extended_attention_mask(pooled_molecule_mask)
 
 
 @register_base_model
@@ -991,13 +991,13 @@ class CanineModel(CaninePretrainedModel):
         molecules_without_extra_cls = molecules[:, 1:, :]
         # `repeated`: [batch_size, almost_char_seq_len, molecule_hidden_size]
         repeated = repeat_interleave(molecules_without_extra_cls, repeats=rate, axis=-2)
-        # TODO check back paddle.repeat_interleave bug
+
         # So far, we've repeated the elements sufficient for any `char_seq_length`
         # that's a multiple of `downsampling_rate`. Now we account for the last
         # n elements (n < `downsampling_rate`), i.e. the remainder of floor
         # division. We do this by repeating the last molecule a few extra times.
         last_molecule = molecules[:, -1:, :]
-        remainder_length = paddle.mod(paddle.to_tensor(char_seq_length), paddle.to_tensor(rate))
+        remainder_length = paddle.mod(paddle.cast(char_seq_length, dtype="int64"), paddle.to_tensor(rate))
         remainder_repeated = repeat_interleave(
             last_molecule,
             repeats=remainder_length + rate,
@@ -1097,9 +1097,9 @@ class CanineModel(CaninePretrainedModel):
                 "You cannot specify both input_ids and inputs_embeds at the same time"
             )
         elif input_ids is not None:
-            input_shape = input_ids.shape
+            input_shape = paddle.shape(input_ids)
         elif inputs_embeds is not None:
-            input_shape = inputs_embeds.shape[:-1]
+            input_shape = paddle.shape(inputs_embeds)[:2]
         else:
             raise ValueError(
                 "You have to specify either input_ids or inputs_embeds")
@@ -1109,11 +1109,11 @@ class CanineModel(CaninePretrainedModel):
         if token_type_ids is None:
             token_type_ids = paddle.zeros(shape=input_shape, dtype="int64")
 
-        extended_attention_mask = get_extended_attention_mask(attention_mask)
-        molecule_attention_mask = _downsample_attention_mask(attention_mask,
-                                                             downsampling_rate=self.downsampling_rate
-                                                             )
-        extended_molecule_attention_mask = get_extended_attention_mask(molecule_attention_mask)
+        extended_attention_mask = get_extended_attention_mask(attention_mask=attention_mask)
+        extended_molecule_attention_mask = _get_downsample_attention_mask(
+            char_attention_mask=attention_mask,
+            downsampling_rate=self.downsampling_rate
+        )
         head_mask = self.get_head_mask(head_mask, self.num_hidden_layers)
         # TODO check head mask is not used
 
@@ -1125,13 +1125,14 @@ class CanineModel(CaninePretrainedModel):
             inputs_embeds=inputs_embeds,
         )
 
-        char_attention_mask = _create_3d_attention_mask_from_input_mask(input_ids, attention_mask)
+        char_attention_mask = _get_char_attention_mask(from_tensor=input_ids, to_mask=attention_mask)
 
         # single local transformer for encoding character sequence.
         # `input_char_encoding`: shape (batch_size, char_seq, hidden_size)
         input_char_encoding = self.initial_char_encoder(
-            input_char_embeddings,
+            hidden_states=input_char_embeddings,
             attn_mask=char_attention_mask,
+            head_mask=head_mask
         )
 
         # Downsample chars to molecules.
@@ -1155,7 +1156,7 @@ class CanineModel(CaninePretrainedModel):
 
         # Traditional Transformer Encoder
         # `molecule_sequence_output`: shape (batch_size, mol_seq_len, molecule_dim)
-        molecule_sequence_output = self.encoder(init_molecule_encoding,
+        molecule_sequence_output = self.encoder(hidden_states=init_molecule_encoding,
                                                 attn_mask=extended_molecule_attention_mask,
                                                 head_mask=head_mask,
                                                 )
@@ -1164,7 +1165,7 @@ class CanineModel(CaninePretrainedModel):
             if self.pooler is not None else None
 
         # `repeated_molecules`: shape (batch_size, char_seq_len, hidden_size)
-        repeated_molecules = self._repeat_molecules(molecule_sequence_output,
+        repeated_molecules = self._repeat_molecules(molecules=molecule_sequence_output,
                                                     char_seq_length=input_shape[-1])
         # `concat`: shape (batch_size, char_seq_len, 2*hidden_size)
         concat = paddle.concat([input_char_encoding, repeated_molecules], axis=-1)
@@ -1174,7 +1175,7 @@ class CanineModel(CaninePretrainedModel):
 
         # final transformer layer
         sequence_output = self.final_char_encoder(
-            sequence_output,
+            hidden_states=sequence_output,
             attn_mask=extended_attention_mask,
         )
         if return_dict:
@@ -1186,8 +1187,8 @@ class CanineModel(CaninePretrainedModel):
 
 
 def repeat_interleave(input, repeats, **kwargs):
-    # repeat interleave for canine model only!! (avoid paddle.interleave .backward() bug)
-    # it will be removed when paddle.interleave fixed.
+    # repeat interleave for canine model only!! (avoid paddle.repeat_interleave bug during training.)
+    # it could be removed when paddle.interleave bug fixed.
     batch_size, len_seq, d_model = input.shape
     flat_input = paddle.tile(input, repeat_times=(1, 1, repeats))
     return paddle.reshape(flat_input, [batch_size, -1, d_model])

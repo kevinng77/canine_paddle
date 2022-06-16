@@ -1,1 +1,1 @@
-python -m tools.export_model --save_inference_dir=./canine_infer --model_path=./canine_tydi_qa
+python tools/export_model.py --save_inference_dir=./canine_infer --model_path=canine-s-tydiqa-finetuned

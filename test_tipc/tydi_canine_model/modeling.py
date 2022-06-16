@@ -1,3 +1,8 @@
+import os
+import sys
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../../')))
+
 from canine import CaninePretrainedModel
 import paddle
 import paddle.nn as nn
@@ -9,6 +14,64 @@ class CanineForTydiQA(CaninePretrainedModel):
     """
     Canine Model with special layers for TydiQA task.
     """
+    base_model_prefix = "canine"
+    pretrained_init_configuration = {
+        "canine-s": {
+            "d_model": 768,
+            "bos_token_id": 57344,
+            "eos_token_id": 57345,
+            "pad_token_id": 0,
+            "num_encoder_layers": 12,
+            "num_heads": 12,
+            "activation": "gelu",
+            "num_hash_buckets": 16384,
+            "num_hash_functions": 8,
+            "type_vocab_size": 16,
+            "layer_norm_eps": 1e-12,
+            "upsampling_kernel_size": 4,
+            "downsampling_rate": 4,
+            "local_transformer_stride": 128,
+            "max_position_embeddings": 16384,
+            "attention_dropout": 0.1,
+            "hidden_dropout": 0.1,
+            "encoder_ffn_dim": 3072,
+            "init_std": 0.02,
+            'model_max_length': 2048
+        },
+        "canine-s-tydiqa-finetuned":{
+            "d_model": 768,
+            "bos_token_id": 57344,
+            "eos_token_id": 57345,
+            "pad_token_id": 0,
+            "num_encoder_layers": 12,
+            "num_heads": 12,
+            "activation": "gelu",
+            "num_hash_buckets": 16384,
+            "num_hash_functions": 8,
+            "type_vocab_size": 16,
+            "layer_norm_eps": 1e-12,
+            "upsampling_kernel_size": 4,
+            "downsampling_rate": 4,
+            "local_transformer_stride": 128,
+            "max_position_embeddings": 16384,
+            "attention_dropout": 0.1,
+            "hidden_dropout": 0.1,
+            "encoder_ffn_dim": 3072,
+            "init_std": 0.02,
+            'model_max_length': 2048
+        }
+    }
+    resource_files_names = {"model_state": "model_state.pdparams"}
+    pretrained_resource_files_map = {
+        "model_state": {
+            "canine-s":
+            # TODO edit weight path
+                "https://huggingface.co/kevinng77/paddle-canine-s/resolve/main/model_state.pdparams",
+            # add a finetuned weight link for test tipc
+            "canine-s-tydiqa-finetuned":
+                "https://huggingface.co/kevinng77/paddle-tydiQA-canine-s/resolve/main/model_state.pdparams"
+        }
+    }
 
     def __init__(self, canine):
         super(CanineForTydiQA, self).__init__()

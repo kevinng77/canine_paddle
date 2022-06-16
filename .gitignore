@@ -10,3 +10,4 @@ log/
 reproduction_results
 test_tipc/canine_infer/*
 test_tipc/canine_tydi_qa/*
+test_tipc/output/*

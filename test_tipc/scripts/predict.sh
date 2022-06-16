@@ -1,0 +1,1 @@
+python -m tools.predict --model_dir=./canine_tydi_qa --use_gpu=1

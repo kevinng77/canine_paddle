@@ -1,0 +1,1 @@
+test_tipc/test_train_inference_python.sh: line 199: $'python3.7\r': command not found

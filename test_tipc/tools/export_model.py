@@ -19,6 +19,7 @@ import sys
 paddle.set_device("cpu")
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(__dir__, '../../')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../')))
 
 from tydi_canine_model import CanineForTydiQA, CanineTokenizerforQA
 
@@ -30,7 +31,7 @@ def get_args(add_help=True):
     parser.add_argument(
         '--save_inference_dir', default='./canine_infer', help='path where to save')
     parser.add_argument(
-        '--model_path', default='./canine_tydi_qa', help='path to pretrained model')
+        '--model_path', default="canine-s-tydiqa-finetuned", help='path to pretrained model')
     args = parser.parse_args()
     return args
 

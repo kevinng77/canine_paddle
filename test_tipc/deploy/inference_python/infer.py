@@ -7,6 +7,8 @@ import sys
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(os.path.abspath(os.path.join(__dir__, '../../../')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '../../')))
+
 from tydi_canine_model import CanineTokenizerforQA
 
 
@@ -194,7 +196,7 @@ def get_args():
     parser.add_argument("--article", default=test_article)
     parser.add_argument("--question", default=test_question)
     parser.add_argument("--model_dir", default="canine_infer")
-    parser.add_argument("--use-gpu", default=False, type=str2bool, help="use_gpu")
+    parser.add_argument("--use_gpu", default=False, type=str2bool, help="use_gpu")
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--warmup", default=0, type=int)
     parser.add_argument("--candidate_beam", default=5, type=int)

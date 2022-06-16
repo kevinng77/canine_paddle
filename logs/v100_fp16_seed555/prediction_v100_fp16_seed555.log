@@ -1,0 +1,263 @@
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - **********  Configuration Arguments **********
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - candidate_beam: 30
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - checkout_steps: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - dev_split_ratio: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - do_file_construct: False
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - do_predict: True
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - do_train: False
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - fp16: False
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - gradient_accumulation_steps: 1
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - learning_rate: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - logging_steps: 100
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - max_answer_length: 100
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - max_position: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - max_seq_length: 2048
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - max_to_predict: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - num_train_epochs: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - output_dir: data/tydiqa_baseline_model/predict
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - output_prediction_file: data/tydiqa_baseline_model/predict/pred.jsonl
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - precomputed_predict_file: data/tydi/dev.h5df
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - predict_batch_size: 32
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - predict_file: data/tydi/tydiqa-v1.0-dev.jsonl.gz
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - scale_loss: 32768
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - seed: 555
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - state_dict_path: data/tydiqa_baseline_model/train
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - train_batch_size: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - train_input_dir: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - warmup_proportion: None
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - **************************************************
+06/13/2022 09:54:53 - INFO - tydi_canine.run_tydi_lib - >>> Number of prediction samples: 336499
+06/13/2022 09:54:59 - INFO - tydi_canine.run_tydi_lib - 
+>>>>>> loading weight from data/tydiqa_baseline_model/train/tydi_seed_555.pdparams
+06/13/2022 09:55:01 - INFO - tydi_canine.run_tydi_lib - step 0/10516 time 0.02min
+06/13/2022 09:56:09 - INFO - tydi_canine.run_tydi_lib - step 100/10516 time 1.14min
+06/13/2022 09:57:18 - INFO - tydi_canine.run_tydi_lib - step 200/10516 time 1.15min
+06/13/2022 09:58:27 - INFO - tydi_canine.run_tydi_lib - step 300/10516 time 1.15min
+06/13/2022 09:59:36 - INFO - tydi_canine.run_tydi_lib - step 400/10516 time 1.15min
+06/13/2022 10:00:45 - INFO - tydi_canine.run_tydi_lib - step 500/10516 time 1.15min
+06/13/2022 10:01:54 - INFO - tydi_canine.run_tydi_lib - step 600/10516 time 1.15min
+06/13/2022 10:03:03 - INFO - tydi_canine.run_tydi_lib - step 700/10516 time 1.15min
+06/13/2022 10:04:13 - INFO - tydi_canine.run_tydi_lib - step 800/10516 time 1.16min
+06/13/2022 10:05:22 - INFO - tydi_canine.run_tydi_lib - step 900/10516 time 1.16min
+06/13/2022 10:06:31 - INFO - tydi_canine.run_tydi_lib - step 1000/10516 time 1.16min
+06/13/2022 10:07:41 - INFO - tydi_canine.run_tydi_lib - step 1100/10516 time 1.16min
+06/13/2022 10:08:50 - INFO - tydi_canine.run_tydi_lib - step 1200/10516 time 1.16min
+06/13/2022 10:10:00 - INFO - tydi_canine.run_tydi_lib - step 1300/10516 time 1.16min
+06/13/2022 10:11:09 - INFO - tydi_canine.run_tydi_lib - step 1400/10516 time 1.16min
+06/13/2022 10:12:19 - INFO - tydi_canine.run_tydi_lib - step 1500/10516 time 1.16min
+06/13/2022 10:13:28 - INFO - tydi_canine.run_tydi_lib - step 1600/10516 time 1.16min
+06/13/2022 10:14:37 - INFO - tydi_canine.run_tydi_lib - step 1700/10516 time 1.16min
+06/13/2022 10:15:47 - INFO - tydi_canine.run_tydi_lib - step 1800/10516 time 1.16min
+06/13/2022 10:16:56 - INFO - tydi_canine.run_tydi_lib - step 1900/10516 time 1.16min
+06/13/2022 10:18:06 - INFO - tydi_canine.run_tydi_lib - step 2000/10516 time 1.16min
+06/13/2022 10:19:15 - INFO - tydi_canine.run_tydi_lib - step 2100/10516 time 1.15min
+06/13/2022 10:20:24 - INFO - tydi_canine.run_tydi_lib - step 2200/10516 time 1.15min
+06/13/2022 10:21:33 - INFO - tydi_canine.run_tydi_lib - step 2300/10516 time 1.15min
+06/13/2022 10:22:42 - INFO - tydi_canine.run_tydi_lib - step 2400/10516 time 1.15min
+06/13/2022 10:23:51 - INFO - tydi_canine.run_tydi_lib - step 2500/10516 time 1.15min
+06/13/2022 10:25:00 - INFO - tydi_canine.run_tydi_lib - step 2600/10516 time 1.15min
+06/13/2022 10:26:09 - INFO - tydi_canine.run_tydi_lib - step 2700/10516 time 1.15min
+06/13/2022 10:27:17 - INFO - tydi_canine.run_tydi_lib - step 2800/10516 time 1.15min
+06/13/2022 10:28:26 - INFO - tydi_canine.run_tydi_lib - step 2900/10516 time 1.15min
+06/13/2022 10:29:35 - INFO - tydi_canine.run_tydi_lib - step 3000/10516 time 1.15min
+06/13/2022 10:30:44 - INFO - tydi_canine.run_tydi_lib - step 3100/10516 time 1.15min
+06/13/2022 10:31:54 - INFO - tydi_canine.run_tydi_lib - step 3200/10516 time 1.15min
+06/13/2022 10:33:03 - INFO - tydi_canine.run_tydi_lib - step 3300/10516 time 1.15min
+06/13/2022 10:34:12 - INFO - tydi_canine.run_tydi_lib - step 3400/10516 time 1.15min
+06/13/2022 10:35:21 - INFO - tydi_canine.run_tydi_lib - step 3500/10516 time 1.15min
+06/13/2022 10:36:30 - INFO - tydi_canine.run_tydi_lib - step 3600/10516 time 1.15min
+06/13/2022 10:37:39 - INFO - tydi_canine.run_tydi_lib - step 3700/10516 time 1.15min
+06/13/2022 10:38:49 - INFO - tydi_canine.run_tydi_lib - step 3800/10516 time 1.15min
+06/13/2022 10:39:58 - INFO - tydi_canine.run_tydi_lib - step 3900/10516 time 1.15min
+06/13/2022 10:41:07 - INFO - tydi_canine.run_tydi_lib - step 4000/10516 time 1.15min
+06/13/2022 10:42:16 - INFO - tydi_canine.run_tydi_lib - step 4100/10516 time 1.15min
+06/13/2022 10:43:25 - INFO - tydi_canine.run_tydi_lib - step 4200/10516 time 1.15min
+06/13/2022 10:44:34 - INFO - tydi_canine.run_tydi_lib - step 4300/10516 time 1.15min
+06/13/2022 10:45:43 - INFO - tydi_canine.run_tydi_lib - step 4400/10516 time 1.15min
+06/13/2022 10:46:52 - INFO - tydi_canine.run_tydi_lib - step 4500/10516 time 1.15min
+06/13/2022 10:48:02 - INFO - tydi_canine.run_tydi_lib - step 4600/10516 time 1.15min
+06/13/2022 10:49:11 - INFO - tydi_canine.run_tydi_lib - step 4700/10516 time 1.15min
+06/13/2022 10:50:20 - INFO - tydi_canine.run_tydi_lib - step 4800/10516 time 1.15min
+06/13/2022 10:51:29 - INFO - tydi_canine.run_tydi_lib - step 4900/10516 time 1.15min
+06/13/2022 10:52:38 - INFO - tydi_canine.run_tydi_lib - step 5000/10516 time 1.15min
+06/13/2022 10:53:47 - INFO - tydi_canine.run_tydi_lib - step 5100/10516 time 1.15min
+06/13/2022 10:54:56 - INFO - tydi_canine.run_tydi_lib - step 5200/10516 time 1.15min
+06/13/2022 10:56:05 - INFO - tydi_canine.run_tydi_lib - step 5300/10516 time 1.15min
+06/13/2022 10:57:15 - INFO - tydi_canine.run_tydi_lib - step 5400/10516 time 1.15min
+06/13/2022 10:58:24 - INFO - tydi_canine.run_tydi_lib - step 5500/10516 time 1.15min
+06/13/2022 10:59:33 - INFO - tydi_canine.run_tydi_lib - step 5600/10516 time 1.15min
+06/13/2022 11:00:42 - INFO - tydi_canine.run_tydi_lib - step 5700/10516 time 1.15min
+06/13/2022 11:01:51 - INFO - tydi_canine.run_tydi_lib - step 5800/10516 time 1.15min
+06/13/2022 11:03:00 - INFO - tydi_canine.run_tydi_lib - step 5900/10516 time 1.15min
+06/13/2022 11:04:09 - INFO - tydi_canine.run_tydi_lib - step 6000/10516 time 1.15min
+06/13/2022 11:05:18 - INFO - tydi_canine.run_tydi_lib - step 6100/10516 time 1.15min
+06/13/2022 11:06:27 - INFO - tydi_canine.run_tydi_lib - step 6200/10516 time 1.15min
+06/13/2022 11:07:36 - INFO - tydi_canine.run_tydi_lib - step 6300/10516 time 1.15min
+06/13/2022 11:08:46 - INFO - tydi_canine.run_tydi_lib - step 6400/10516 time 1.15min
+06/13/2022 11:09:55 - INFO - tydi_canine.run_tydi_lib - step 6500/10516 time 1.15min
+06/13/2022 11:11:04 - INFO - tydi_canine.run_tydi_lib - step 6600/10516 time 1.15min
+06/13/2022 11:12:13 - INFO - tydi_canine.run_tydi_lib - step 6700/10516 time 1.16min
+06/13/2022 11:13:23 - INFO - tydi_canine.run_tydi_lib - step 6800/10516 time 1.15min
+06/13/2022 11:14:32 - INFO - tydi_canine.run_tydi_lib - step 6900/10516 time 1.15min
+06/13/2022 11:15:41 - INFO - tydi_canine.run_tydi_lib - step 7000/10516 time 1.15min
+06/13/2022 11:16:50 - INFO - tydi_canine.run_tydi_lib - step 7100/10516 time 1.15min
+06/13/2022 11:17:59 - INFO - tydi_canine.run_tydi_lib - step 7200/10516 time 1.15min
+06/13/2022 11:19:08 - INFO - tydi_canine.run_tydi_lib - step 7300/10516 time 1.15min
+06/13/2022 11:20:17 - INFO - tydi_canine.run_tydi_lib - step 7400/10516 time 1.15min
+06/13/2022 11:21:26 - INFO - tydi_canine.run_tydi_lib - step 7500/10516 time 1.15min
+06/13/2022 11:22:35 - INFO - tydi_canine.run_tydi_lib - step 7600/10516 time 1.15min
+06/13/2022 11:23:44 - INFO - tydi_canine.run_tydi_lib - step 7700/10516 time 1.15min
+06/13/2022 11:24:53 - INFO - tydi_canine.run_tydi_lib - step 7800/10516 time 1.15min
+06/13/2022 11:26:02 - INFO - tydi_canine.run_tydi_lib - step 7900/10516 time 1.15min
+06/13/2022 11:27:11 - INFO - tydi_canine.run_tydi_lib - step 8000/10516 time 1.15min
+06/13/2022 11:28:21 - INFO - tydi_canine.run_tydi_lib - step 8100/10516 time 1.15min
+06/13/2022 11:29:30 - INFO - tydi_canine.run_tydi_lib - step 8200/10516 time 1.16min
+06/13/2022 11:30:39 - INFO - tydi_canine.run_tydi_lib - step 8300/10516 time 1.15min
+06/13/2022 11:31:49 - INFO - tydi_canine.run_tydi_lib - step 8400/10516 time 1.16min
+06/13/2022 11:32:58 - INFO - tydi_canine.run_tydi_lib - step 8500/10516 time 1.15min
+06/13/2022 11:34:07 - INFO - tydi_canine.run_tydi_lib - step 8600/10516 time 1.15min
+06/13/2022 11:35:17 - INFO - tydi_canine.run_tydi_lib - step 8700/10516 time 1.16min
+06/13/2022 11:36:26 - INFO - tydi_canine.run_tydi_lib - step 8800/10516 time 1.15min
+06/13/2022 11:37:35 - INFO - tydi_canine.run_tydi_lib - step 8900/10516 time 1.15min
+06/13/2022 11:38:44 - INFO - tydi_canine.run_tydi_lib - step 9000/10516 time 1.15min
+06/13/2022 11:39:53 - INFO - tydi_canine.run_tydi_lib - step 9100/10516 time 1.15min
+06/13/2022 11:41:02 - INFO - tydi_canine.run_tydi_lib - step 9200/10516 time 1.15min
+06/13/2022 11:42:11 - INFO - tydi_canine.run_tydi_lib - step 9300/10516 time 1.15min
+06/13/2022 11:43:20 - INFO - tydi_canine.run_tydi_lib - step 9400/10516 time 1.15min
+06/13/2022 11:44:29 - INFO - tydi_canine.run_tydi_lib - step 9500/10516 time 1.15min
+06/13/2022 11:45:38 - INFO - tydi_canine.run_tydi_lib - step 9600/10516 time 1.15min
+06/13/2022 11:46:48 - INFO - tydi_canine.run_tydi_lib - step 9700/10516 time 1.15min
+06/13/2022 11:47:57 - INFO - tydi_canine.run_tydi_lib - step 9800/10516 time 1.15min
+06/13/2022 11:49:06 - INFO - tydi_canine.run_tydi_lib - step 9900/10516 time 1.15min
+06/13/2022 11:50:15 - INFO - tydi_canine.run_tydi_lib - step 10000/10516 time 1.15min
+06/13/2022 11:51:24 - INFO - tydi_canine.run_tydi_lib - step 10100/10516 time 1.15min
+06/13/2022 11:52:33 - INFO - tydi_canine.run_tydi_lib - step 10200/10516 time 1.15min
+06/13/2022 11:53:42 - INFO - tydi_canine.run_tydi_lib - step 10300/10516 time 1.15min
+06/13/2022 11:54:51 - INFO - tydi_canine.run_tydi_lib - step 10400/10516 time 1.15min
+06/13/2022 11:56:01 - INFO - tydi_canine.run_tydi_lib - step 10500/10516 time 1.15min
+06/13/2022 11:56:20 - INFO - tydi_canine.run_tydi_lib - >>> start generating TyqiQA task evaluation file
+06/13/2022 11:56:22 - INFO - tydi_canine.run_tydi_lib - >>> Loaded predicted logits from ['data/tydiqa_baseline_model/predict/results_gpu_0.pickle']
+06/13/2022 11:56:22 - INFO - tydi_canine.run_tydi_lib - >>> start processing predicted logits
+06/13/2022 11:56:24 - INFO - tydi_canine.run_tydi_lib - Reading: data/tydi/tydiqa-v1.0-dev.jsonl.gz
+06/13/2022 11:56:32 - INFO - tydi_canine.run_tydi_lib - loading precomputed evaluation meta data....
+06/13/2022 12:00:18 - INFO - tydi_canine.run_tydi_lib -   Num candidate examples loaded (includes all shards): 18670
+06/13/2022 12:00:18 - INFO - tydi_canine.run_tydi_lib -   Num candidate features loaded: 336499
+06/13/2022 12:00:18 - INFO - tydi_canine.run_tydi_lib -   Num prediction result features: 336499
+06/13/2022 12:00:20 - INFO - tydi_canine.postproc - Post-processing predictions started.
+06/13/2022 12:00:22 - INFO - tydi_canine.postproc - Start Combining results and articles....
+06/13/2022 12:00:22 - INFO - tydi_canine.postproc - >>> step 0/691668
+06/13/2022 12:00:34 - INFO - tydi_canine.postproc - >>> step 50000/691668
+06/13/2022 12:00:44 - INFO - tydi_canine.postproc - >>> step 100000/691668
+06/13/2022 12:00:54 - INFO - tydi_canine.postproc - >>> step 150000/691668
+06/13/2022 12:01:02 - INFO - tydi_canine.postproc - >>> step 200000/691668
+06/13/2022 12:01:10 - INFO - tydi_canine.postproc - >>> step 250000/691668
+06/13/2022 12:01:17 - INFO - tydi_canine.postproc - >>> step 300000/691668
+06/13/2022 12:01:23 - INFO - tydi_canine.postproc - >>> step 350000/691668
+06/13/2022 12:01:28 - INFO - tydi_canine.postproc - >>> step 400000/691668
+06/13/2022 12:01:33 - INFO - tydi_canine.postproc - >>> step 450000/691668
+06/13/2022 12:01:37 - INFO - tydi_canine.postproc - >>> step 500000/691668
+06/13/2022 12:01:39 - INFO - tydi_canine.postproc - >>> step 550000/691668
+06/13/2022 12:01:40 - INFO - tydi_canine.postproc - >>> step 600000/691668
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc - >>> step 650000/691668
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc -   Num candidate examples found: 18670
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc -   Num candidate features found: 336499
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc -   Num results found: 336499
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc -   len(merged): 691668
+06/13/2022 12:01:41 - INFO - tydi_canine.postproc - >>> Collecting & formatting Article Answers......
+06/13/2022 12:01:55 - WARNING - root - No passage predicted for eval_example -3488039773215936819. Choosing first.
+06/13/2022 12:02:02 - WARNING - root - No passage predicted for eval_example -1469093818965592083. Choosing first.
+06/13/2022 12:02:11 - INFO - tydi_canine.postproc - >>> Step 1000/18670
+06/13/2022 12:02:16 - WARNING - root - No passage predicted for eval_example 3007153605633700361. Choosing first.
+06/13/2022 12:02:23 - WARNING - root - No passage predicted for eval_example -919237193402015087. Choosing first.
+06/13/2022 12:02:24 - WARNING - root - No passage predicted for eval_example 1668039973123722115. Choosing first.
+06/13/2022 12:02:26 - WARNING - root - No passage predicted for eval_example -4952617144017271667. Choosing first.
+06/13/2022 12:02:27 - WARNING - root - No passage predicted for eval_example 709186608770759206. Choosing first.
+06/13/2022 12:02:27 - WARNING - root - No passage predicted for eval_example 4665610752691275402. Choosing first.
+06/13/2022 12:02:29 - WARNING - root - No predictions for eval_example 6565311200535470050
+06/13/2022 12:02:29 - WARNING - root - No passage predicted for eval_example 6796622711544574859. Choosing first.
+06/13/2022 12:02:32 - INFO - tydi_canine.postproc - >>> Step 2000/18670
+06/13/2022 12:02:37 - WARNING - root - No passage predicted for eval_example 8322668920220211806. Choosing first.
+06/13/2022 12:02:37 - WARNING - root - No predictions for eval_example -3344421276196404684
+06/13/2022 12:02:39 - WARNING - root - No passage predicted for eval_example 1843753222985376538. Choosing first.
+06/13/2022 12:02:50 - WARNING - root - No passage predicted for eval_example 3663075410844845048. Choosing first.
+06/13/2022 12:02:51 - WARNING - root - No passage predicted for eval_example -5572583771541411570. Choosing first.
+06/13/2022 12:02:53 - WARNING - root - No predictions for eval_example -1090398498867875604
+06/13/2022 12:02:54 - INFO - tydi_canine.postproc - >>> Step 3000/18670
+06/13/2022 12:02:57 - WARNING - root - No passage predicted for eval_example -838096108193679031. Choosing first.
+06/13/2022 12:02:57 - WARNING - root - No passage predicted for eval_example -2583992282452387259. Choosing first.
+06/13/2022 12:03:03 - WARNING - root - No passage predicted for eval_example -9086146235349882081. Choosing first.
+06/13/2022 12:03:07 - WARNING - root - No passage predicted for eval_example 3934880689793758928. Choosing first.
+06/13/2022 12:03:08 - WARNING - root - No passage predicted for eval_example 1437093277137032832. Choosing first.
+06/13/2022 12:03:14 - WARNING - root - No passage predicted for eval_example 3675064069330734281. Choosing first.
+06/13/2022 12:03:15 - INFO - tydi_canine.postproc - >>> Step 4000/18670
+06/13/2022 12:03:35 - INFO - tydi_canine.postproc - >>> Step 5000/18670
+06/13/2022 12:03:40 - WARNING - root - No passage predicted for eval_example 1966730541190795452. Choosing first.
+06/13/2022 12:03:41 - WARNING - root - No predictions for eval_example -5949291916517996877
+06/13/2022 12:03:47 - WARNING - root - No predictions for eval_example 483185134238717036
+06/13/2022 12:03:51 - WARNING - root - No passage predicted for eval_example -3071583851434992417. Choosing first.
+06/13/2022 12:03:56 - WARNING - root - No passage predicted for eval_example 7410180025129021252. Choosing first.
+06/13/2022 12:03:56 - INFO - tydi_canine.postproc - >>> Step 6000/18670
+06/13/2022 12:03:57 - WARNING - root - No predictions for eval_example 7693249443983482568
+06/13/2022 12:04:01 - WARNING - root - No passage predicted for eval_example 4163179397873590275. Choosing first.
+06/13/2022 12:04:17 - INFO - tydi_canine.postproc - >>> Step 7000/18670
+06/13/2022 12:04:23 - WARNING - root - No passage predicted for eval_example 6901949866542786931. Choosing first.
+06/13/2022 12:04:30 - WARNING - root - No passage predicted for eval_example -3432515100006138856. Choosing first.
+06/13/2022 12:04:37 - WARNING - root - No predictions for eval_example 5902650000795019979
+06/13/2022 12:04:38 - INFO - tydi_canine.postproc - >>> Step 8000/18670
+06/13/2022 12:04:51 - WARNING - root - No passage predicted for eval_example 8279408473552426178. Choosing first.
+06/13/2022 12:04:52 - WARNING - root - No predictions for eval_example 3661337307664765885
+06/13/2022 12:04:54 - WARNING - root - No passage predicted for eval_example -7898569140872983117. Choosing first.
+06/13/2022 12:04:55 - WARNING - root - No passage predicted for eval_example -6669750212603898344. Choosing first.
+06/13/2022 12:05:00 - INFO - tydi_canine.postproc - >>> Step 9000/18670
+06/13/2022 12:05:01 - WARNING - root - No passage predicted for eval_example -4194866533342765131. Choosing first.
+06/13/2022 12:05:05 - WARNING - root - No passage predicted for eval_example 3574047376030688630. Choosing first.
+06/13/2022 12:05:12 - WARNING - root - No passage predicted for eval_example 5124559260406247754. Choosing first.
+06/13/2022 12:05:14 - WARNING - root - No passage predicted for eval_example 8270259553561019967. Choosing first.
+06/13/2022 12:05:16 - WARNING - root - No passage predicted for eval_example 5321138079585516434. Choosing first.
+06/13/2022 12:05:17 - WARNING - root - No passage predicted for eval_example -8267132941600234159. Choosing first.
+06/13/2022 12:05:20 - INFO - tydi_canine.postproc - >>> Step 10000/18670
+06/13/2022 12:05:20 - WARNING - root - No passage predicted for eval_example 3809322381880597034. Choosing first.
+06/13/2022 12:05:32 - WARNING - root - No passage predicted for eval_example 999628010400669826. Choosing first.
+06/13/2022 12:05:40 - INFO - tydi_canine.postproc - >>> Step 11000/18670
+06/13/2022 12:05:42 - WARNING - root - No passage predicted for eval_example -2111417209445166930. Choosing first.
+06/13/2022 12:06:01 - INFO - tydi_canine.postproc - >>> Step 12000/18670
+06/13/2022 12:06:05 - WARNING - root - No passage predicted for eval_example 7632633742992588473. Choosing first.
+06/13/2022 12:06:12 - WARNING - root - No passage predicted for eval_example -926187895377046192. Choosing first.
+06/13/2022 12:06:23 - INFO - tydi_canine.postproc - >>> Step 13000/18670
+06/13/2022 12:06:27 - WARNING - root - No passage predicted for eval_example 6617183211078325636. Choosing first.
+06/13/2022 12:06:30 - WARNING - root - No predictions for eval_example -7699728260210150066
+06/13/2022 12:06:39 - WARNING - root - No passage predicted for eval_example 7530718627684353278. Choosing first.
+06/13/2022 12:06:44 - INFO - tydi_canine.postproc - >>> Step 14000/18670
+06/13/2022 12:06:59 - WARNING - root - No passage predicted for eval_example -2999534583346695596. Choosing first.
+06/13/2022 12:07:01 - WARNING - root - No passage predicted for eval_example 2196617430991127130. Choosing first.
+06/13/2022 12:07:01 - WARNING - root - No passage predicted for eval_example 4397290220212284932. Choosing first.
+06/13/2022 12:07:01 - WARNING - root - No passage predicted for eval_example -3610017133065831302. Choosing first.
+06/13/2022 12:07:05 - INFO - tydi_canine.postproc - >>> Step 15000/18670
+06/13/2022 12:07:10 - WARNING - root - No passage predicted for eval_example 8949735132014855513. Choosing first.
+06/13/2022 12:07:16 - WARNING - root - No passage predicted for eval_example -3977085559331344349. Choosing first.
+06/13/2022 12:07:18 - WARNING - root - No passage predicted for eval_example 5847224471723306941. Choosing first.
+06/13/2022 12:07:23 - WARNING - root - No passage predicted for eval_example -4097419857006491820. Choosing first.
+06/13/2022 12:07:24 - WARNING - root - No passage predicted for eval_example 5764307143166860437. Choosing first.
+06/13/2022 12:07:25 - INFO - tydi_canine.postproc - >>> Step 16000/18670
+06/13/2022 12:07:26 - WARNING - root - No passage predicted for eval_example 8771092624763674503. Choosing first.
+06/13/2022 12:07:27 - WARNING - root - No passage predicted for eval_example -4788761101780063457. Choosing first.
+06/13/2022 12:07:30 - WARNING - root - No passage predicted for eval_example 857319145148885584. Choosing first.
+06/13/2022 12:07:38 - WARNING - root - No passage predicted for eval_example -433227529768027146. Choosing first.
+06/13/2022 12:07:39 - WARNING - root - No passage predicted for eval_example 2595983157228829776. Choosing first.
+06/13/2022 12:07:42 - WARNING - root - No passage predicted for eval_example 7692257231696946502. Choosing first.
+06/13/2022 12:07:45 - WARNING - root - No passage predicted for eval_example 4036996555338469156. Choosing first.
+06/13/2022 12:07:46 - INFO - tydi_canine.postproc - >>> Step 17000/18670
+06/13/2022 12:07:55 - WARNING - root - No passage predicted for eval_example -3405020319138015455. Choosing first.
+06/13/2022 12:07:57 - WARNING - root - No passage predicted for eval_example 8952035289426649660. Choosing first.
+06/13/2022 12:08:03 - WARNING - root - No passage predicted for eval_example 206926814747769566. Choosing first.
+06/13/2022 12:08:04 - WARNING - root - No passage predicted for eval_example 4655133029131525731. Choosing first.
+06/13/2022 12:08:05 - WARNING - root - No passage predicted for eval_example 9035334114280147788. Choosing first.
+06/13/2022 12:08:05 - WARNING - root - No passage predicted for eval_example -8609086068217709889. Choosing first.
+06/13/2022 12:08:06 - INFO - tydi_canine.postproc - >>> Step 18000/18670
+06/13/2022 12:08:07 - WARNING - root - No passage predicted for eval_example -7476438999577597264. Choosing first.
+06/13/2022 12:08:08 - WARNING - root - No passage predicted for eval_example 491270224120342869. Choosing first.
+06/13/2022 12:08:08 - WARNING - root - No passage predicted for eval_example -8391967572883735040. Choosing first.
+06/13/2022 12:08:17 - WARNING - root - No passage predicted for eval_example 1595462305435281146. Choosing first.
+06/13/2022 12:08:19 - INFO - root -   Num post-processed results: 18661
+06/13/2022 12:08:19 - INFO - tydi_canine.run_tydi_lib - Prediction finished for all shards.
+06/13/2022 12:08:19 - INFO - tydi_canine.run_tydi_lib -   Total output predictions: 18661
