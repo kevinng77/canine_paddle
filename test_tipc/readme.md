@@ -74,7 +74,34 @@ python -m tools.predict --model_dir=canine-s-tydiqa-finetuned
 
 ### 基于Inference的推理
 
-请参考 [deploy/inference_python](deploy/inference_python) 文件夹。
+**模型动态转静态：**
+
+使用下面的命令完成`canine-s`模型的动转静导出，其中 `canine-s-tydiqa-finetuned` 为在 TydiQA 任务上微调后的权重 。
+
+```shell
+python tools/export_model.py --save_inference_dir=./canine_infer --model_path=canine-s-tydiqa-finetuned
+```
+
+最终在`canine_infer/`文件夹下会生成3个 `inference.xxx`文件。
+
+**模型推理：**
+
+```shell
+python deploy/inference_python/infer.py --model_dir=./canine_infer
+```
+
+在终端中输出结果如下。
+
+```shell
+>>> Article: The Nobel Prize in Literature (Swedish: Nobelpriset i litteratur) is awarded annually by the Swedish Academy to authors for outstanding contributions in the field of literature. It is one of the five Nobel Prizes established by the 1895 will of Alfred Nobel, which are awarded for outstanding contributions in chemistry, physics, literature, peace, and physiology or medicine.[1] As dictated by Nobel's will, the award is administered by the Nobel Foundation and awarded by a committee that consists of five members elected by the Swedish Academy.[2] The first Nobel Prize in Literature was awarded in 1901 to Sully Prudhomme of France.[3] Each recipient receives a medal, a diploma and a monetary award prize that has varied throughout the years.[4] In 1901, Prudhomme received 150,782 SEK, which is equivalent to 8,823,637.78 SEK in January 2018.
+>>> Question: Who was the first Nobel prize winner for Literature?
+
+>>> Answer Text: Sully Prudhomme of France, score: 4.677705764770508
+```
+
+表示对于问题 "Who was the first Nobel prize winner for Literature?" 的答案是 "Sully Prudhomme of France"，置信度为 4.6777。该结果与基于训练引擎的cpu预测结果仅相差 `1e-6`。
+
+【备注】详细请参考 [deploy/inference_python](deploy/inference_python) 文件夹。
 
 ### 基于Serving的服务化部署
 
@@ -92,7 +119,7 @@ bash test_tipc/test_train_inference_python.sh test_tipc/configs/canine/train_inf
 [33m Run successfully with command - python deploy/inference_python/infer.py --model_dir=./canine_infer --use_gpu=False --benchmark=False               > ./output/python_infer_cpu_usemkldnn_False_threads_null_precision_null_batchsize_null.log 2>&1 !  [0m
 ```
 
-更多详细内容，请参考 [canine_paddle tipc测试](test_tipc/readme.md)
+【备注】详细请参考 [test_tipc/test_tipc 文件夹](test_tipc/readme.md)
 
 ## LICENSE
 
