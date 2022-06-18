@@ -1,4 +1,4 @@
-python3 -m paddle.distributed.launch --selected_gpus='0,1,2,3' run_tydi.py \
+python3 -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
   --state_dict_path=data/tydiqa_baseline_model/train \
   --predict_file=data/tydi/tydiqa-v1.0-dev.jsonl.gz \
   --precomputed_predict_file=data/tydi/dev.h5df \

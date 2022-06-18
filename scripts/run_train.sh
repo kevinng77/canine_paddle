@@ -1,4 +1,4 @@
-python -m paddle.distributed.launch --selected_gpus='0,1,2,3' run_tydi.py \
+python -m paddle.distributed.launch --selected_gpus='0' run_tydi.py \
   --train_input_dir=data/tydi/train.h5df \
   --do_train \
   --max_seq_length=2048 \
@@ -12,5 +12,5 @@ python -m paddle.distributed.launch --selected_gpus='0,1,2,3' run_tydi.py \
   --fp16 \
   --scale_loss=4096 \
   --dev_split_ratio=0.002 \
-  --gradient_accumulation_steps=8 \
+  --gradient_accumulation_steps=1 \
   --output_dir=data/tydiqa_baseline_model/train

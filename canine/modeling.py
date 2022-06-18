@@ -21,11 +21,15 @@ from paddle.fluid.data_feeder import convert_dtype
 from paddle.nn import functional as F
 from paddle.fluid import layers
 from paddle.fluid.dygraph import LayerList
-
 from paddlenlp.transformers import PretrainedModel, register_base_model
 
 __all__ = [
-    'CanineModel', 'CaninePretrainedModel', 'CanineEmbeddings'
+    'CanineModel',
+    'CaninePretrainedModel',
+    'CanineForQuestionAnswering',
+    'CanineForSequenceClassification',
+    'CanineForTokenClassification',
+    'CanineForMultipleChoice'
 ]
 
 # Support up to 16 hash functions.
@@ -37,7 +41,6 @@ def _convert_attention_mask(attn_mask, dtype):
     if attn_mask is not None and attn_mask.dtype != dtype:
         attn_mask_dtype = convert_dtype(attn_mask.dtype)
         if attn_mask_dtype == 'bool' or 'int' in attn_mask_dtype:
-            # attention mask value is modified to -10000
             attn_mask = (paddle.cast(attn_mask, dtype) - 1.0) * 10000
         else:
             attn_mask = paddle.cast(attn_mask, dtype)
@@ -53,9 +56,11 @@ class CaninePretrainedModel(PretrainedModel):
     Refer to :class:`~paddlenlp.transformers.model_utils.PretrainedModel` for more details.
     """
     base_model_prefix = "canine"
+    model_config_file = "model_config.json"
+
     pretrained_init_configuration = {
         "canine-s": {
-            "d_model": 768,
+            "hidden_size": 768,
             "bos_token_id": 57344,
             "eos_token_id": 57345,
             "pad_token_id": 0,
@@ -80,9 +85,9 @@ class CaninePretrainedModel(PretrainedModel):
     resource_files_names = {"model_state": "model_state.pdparams"}
     pretrained_resource_files_map = {
         "model_state": {
-            "canine-s":
-            # TODO edit weight path
-                "https://huggingface.co/kevinng77/paddle-canine-s/resolve/main/model_state.pdparams",
+            "canine-s":  # TODO
+            # "https://bj.bcebos.com/paddlenlp/models/transformers/canine/canine-s.pdparams",
+                "https://huggingface.co/kevinng77/paddle-canine-s/resolve/main/model_state.pdparams"
         }
     }
 
@@ -208,6 +213,8 @@ class CanineEmbeddings(nn.Layer):
                 position_ids=None,
                 inputs_embeds=None,
                 ):
+        assert input_ids is not None or inputs_embeds is not None, \
+            r"Please provide `input_ids` or `input_embeds` for CanineEmbedding forward."
         if input_ids is not None:
             input_shape = paddle.shape(input_ids)
         else:
@@ -271,7 +278,7 @@ class CharactersToMolecules(nn.Layer):
             Tensor: output hidden states with shape `[batch_size, molecule_seq_length, hidden_size]`
                     , where `molecule_seq_length == char_seq_length/down_sampling_rate`
         """
-        cls_encoding = char_encoding[:, 0:1, :]  # `cls_encoding`: [batch, 1, hidden_size]
+        cls_encoding = char_encoding[:, 0:1, :]
 
         # Transpose char_encoding to be [batch, hidden_size, char_seq]
         char_encoding = paddle.transpose(char_encoding, [0, 2, 1])
@@ -344,11 +351,10 @@ class ConvProjection(nn.Layer):
         result = paddle.transpose(result, [0, 2, 1])
         result = self.dropout(self.layer_norm(self.activation(result)))
 
-        # TODO add support for MLM task
         return result
 
 
-class CanineSelfAttention(nn.MultiHeadAttention):
+class CanineMultiHeadAttention(nn.MultiHeadAttention):
     """
     Construct self Attention Layer for Canine Model to support Single Local Attention and Traditional Attention.
 
@@ -359,9 +365,9 @@ class CanineSelfAttention(nn.MultiHeadAttention):
                  num_heads=12,
                  dropout=0.1,
                  ):
-        super(CanineSelfAttention, self).__init__(embed_dim=embed_dim,
-                                                  num_heads=num_heads,
-                                                  dropout=dropout, )
+        super(CanineMultiHeadAttention, self).__init__(embed_dim=embed_dim,
+                                                       num_heads=num_heads,
+                                                       dropout=dropout, )
 
         # Owning to support single local attention, linear projection after
         # multi-head attention is moved to `~paddlenlp.transformers.Canine.CanineAttention`
@@ -387,7 +393,6 @@ class CanineSelfAttention(nn.MultiHeadAttention):
             q, k, v, cache = self._prepare_qkv(query, key, value, cache)
 
         # scale dot product attention
-        # TODO: use tensor.matmul, however it doesn't support `alpha`
         product = layers.matmul(
             x=q, y=k, transpose_y=True, alpha=self.head_dim ** -0.5)
 
@@ -421,7 +426,7 @@ class CanineSelfAttention(nn.MultiHeadAttention):
         return out if len(outs) == 1 else tuple(outs)
 
 
-class CanineAttention(nn.Layer):
+class CanineSelfAttention(nn.Layer):
     """
     Construct Attention Layer for Canine Model to support Single Local Attention and Traditional Attention.
 
@@ -436,20 +441,20 @@ class CanineAttention(nn.Layer):
                  hidden_dropout=0.1,
                  layer_norm_eps=1e-12,
                  local=False,
-                 always_attend_to_first_position=False,  # TODO check parameter usage
-                 first_position_attends_to_all=False,  # TODO check parameter usage
+                 always_attend_to_first_position=False,
+                 first_position_attends_to_all=False,
                  attend_from_chunk_width=128,
                  attend_from_chunk_stride=128,
                  attend_to_chunk_width=128,
                  attend_to_chunk_stride=128,
                  max_seq_length=2048
                  ):
-        super(CanineAttention, self).__init__()
+        super(CanineSelfAttention, self).__init__()
 
-        self.self_attn = CanineSelfAttention(embed_dim=hidden_size,
-                                             num_heads=num_heads,
-                                             dropout=attn_dropout,
-                                             )
+        self.self_attn = CanineMultiHeadAttention(embed_dim=hidden_size,
+                                                  num_heads=num_heads,
+                                                  dropout=attn_dropout,
+                                                  )
 
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.layer_norm = nn.LayerNorm(hidden_size, epsilon=layer_norm_eps)
@@ -532,11 +537,10 @@ class CanineAttention(nn.Layer):
             # Perform Single Local Attention
             batch_size, from_seq_length, hidden_size = paddle.shape(hidden_states)
 
-            # TODO: this is to avoid dynamic to static error: tensor not init
+            # Assign a tensor to avoid error during export model from dynamic to static.
             tensor_for_slice = paddle.assign(hidden_states)
-            # compute attention scores for each pair of windows and concatenate the results.
-            # attention_output_chunks = []
 
+            # compute attention scores for each pair of windows and concatenate the results.
             attention_output = paddle.zeros((batch_size, from_seq_length, hidden_size))
             for chunk_pos in self.chunks_iter:
                 from_start, from_end, to_start, to_end = chunk_pos
@@ -562,10 +566,8 @@ class CanineAttention(nn.Layer):
                                                          attn_mask=attention_mask_chunk,
                                                          head_mask=head_mask,
                                                          )
-                # TODO: this could avoid dynamic to static model convert bug, but hurts speed
+
                 attention_output[:, to_start:to_end, :] = attention_outputs_chunk
-                # attention_output_chunks.append(attention_outputs_chunk)
-            # attention_output = paddle.concat(attention_output_chunks, axis=1)
 
         attention_output = self.dense(attention_output)
         attention_output = self.dropout(attention_output)
@@ -574,7 +576,7 @@ class CanineAttention(nn.Layer):
         return attention_output
 
 
-class CanineLayer(nn.Layer):
+class CanineEncoderLayer(nn.Layer):
     """
     Construct Canine Transformer Layer, supporting Single Local Attention and Traditional Attention.
 
@@ -590,7 +592,7 @@ class CanineLayer(nn.Layer):
                  attn_dropout=0.1,
                  hidden_dropout=0.1,
                  local=False,
-                 always_attend_to_first_position=False,  # TODO check parameter usage
+                 always_attend_to_first_position=False,
                  first_position_attends_to_all=False,
                  attend_from_chunk_width=128,
                  attend_from_chunk_stride=128,
@@ -598,22 +600,22 @@ class CanineLayer(nn.Layer):
                  attend_to_chunk_stride=128,
                  max_seq_length=2048
                  ):
-        super(CanineLayer, self).__init__()
+        super(CanineEncoderLayer, self).__init__()
         self.seq_len_dim = 1
-        self.attention = CanineAttention(hidden_size=hidden_size,
-                                         num_heads=num_heads,
-                                         attn_dropout=attn_dropout,
-                                         hidden_dropout=hidden_dropout,
-                                         layer_norm_eps=layer_norm_eps,
-                                         local=local,
-                                         always_attend_to_first_position=always_attend_to_first_position,
-                                         first_position_attends_to_all=first_position_attends_to_all,
-                                         attend_from_chunk_width=attend_from_chunk_width,
-                                         attend_from_chunk_stride=attend_from_chunk_stride,
-                                         attend_to_chunk_width=attend_to_chunk_width,
-                                         attend_to_chunk_stride=attend_to_chunk_stride,
-                                         max_seq_length=max_seq_length
-                                         )
+        self.attention = CanineSelfAttention(hidden_size=hidden_size,
+                                             num_heads=num_heads,
+                                             attn_dropout=attn_dropout,
+                                             hidden_dropout=hidden_dropout,
+                                             layer_norm_eps=layer_norm_eps,
+                                             local=local,
+                                             always_attend_to_first_position=always_attend_to_first_position,
+                                             first_position_attends_to_all=first_position_attends_to_all,
+                                             attend_from_chunk_width=attend_from_chunk_width,
+                                             attend_from_chunk_stride=attend_from_chunk_stride,
+                                             attend_to_chunk_width=attend_to_chunk_width,
+                                             attend_to_chunk_stride=attend_to_chunk_stride,
+                                             max_seq_length=max_seq_length
+                                             )
 
         self.ffn = nn.Linear(in_features=hidden_size, out_features=ffn_dim)
 
@@ -627,7 +629,6 @@ class CanineLayer(nn.Layer):
                 attn_mask=None,
                 head_mask=None,
                 ):
-        # TODO will support cache?
         self_attention_outputs = self.attention(
             hidden_states,
             attn_mask,
@@ -645,20 +646,18 @@ class CanineLayer(nn.Layer):
 
 class CanineEncoder(nn.Layer):
     """
-    Construct Encoder module for Canine Model.
+    Construct Transformer Encoder module for Canine Model.
 
     Please refer to :class:`~paddlenlp.transformers.Canine.CanineModel` for more information
     regarding the arguments.
     """
 
-    # TODO if head mask never used, this class could be replaced by nn.TransformerEncoder()
-
     def __init__(self,
                  hidden_size,
                  num_heads,
-                 activation,
-                 encoder_ffn_dim,
                  num_encoder_layers,
+                 encoder_ffn_dim,
+                 activation='gelu',
                  attn_dropout=0.1,
                  hidden_dropout=0.1,
                  layer_norm_eps=1e-12,
@@ -674,7 +673,7 @@ class CanineEncoder(nn.Layer):
 
         super(CanineEncoder, self).__init__()
         self.layers = LayerList([
-            CanineLayer(
+            CanineEncoderLayer(
                 hidden_size=hidden_size,
                 num_heads=num_heads,
                 activation=activation,
@@ -697,7 +696,7 @@ class CanineEncoder(nn.Layer):
             self,
             hidden_states,
             attn_mask=None,
-            head_mask=None,  # TODO head mask can remove?
+            head_mask=None,
             cache=None
     ):
         src_mask = _convert_attention_mask(attn_mask=attn_mask,
@@ -714,7 +713,6 @@ class CanineEncoder(nn.Layer):
                              attn_mask=src_mask,
                              head_mask=layer_head_mask)
             else:
-                # TODO can support cache?
                 output, new_cache = mod(output,
                                         attn_mask=src_mask,
                                         head_mask=layer_head_mask,
@@ -725,6 +723,9 @@ class CanineEncoder(nn.Layer):
 
 
 def get_extended_attention_mask(attention_mask):
+    """
+    Extended a 2D or 3D attention mask to 4D.
+    """
     if attention_mask.ndim == 3:
         extended_attention_mask = attention_mask.unsqueeze(1)
     elif attention_mask.ndim == 2:
@@ -798,10 +799,10 @@ class CanineModel(CaninePretrainedModel):
             The id for padding token. Defaults to ``0``.
         eos_token_id (`int`, optional):
             The id for end of sentence token. Defaults to ``57345``.
-        d_model (`int`, optional):
+        hidden_size (`int`, optional):
             Dimensionality of the layers and the pooler layer. Defaults to ``768``.
         num_encoder_layers (`int`, optional):
-            Number of Transformer encoder layers for BlenderbotEncoder. Defaults to ``12``.
+            Number of Transformer encoder layers for CanineEncoder. Defaults to ``12``.
         num_heads (`int`, optional):
             Number of attention heads for each Transformer encoder layer in CanineEncoder.
             Defaults to ``12``.
@@ -849,7 +850,7 @@ class CanineModel(CaninePretrainedModel):
                  bos_token_id=57344,
                  eos_token_id=57345,
                  pad_token_id=0,
-                 d_model=768,
+                 hidden_size=768,
                  num_encoder_layers=12,
                  num_heads=12,
                  hidden_dropout=0.01,
@@ -878,7 +879,7 @@ class CanineModel(CaninePretrainedModel):
         self.num_hidden_layers = num_encoder_layers
         # hash embedding
         self.char_embeddings = CanineEmbeddings(
-            embedding_dim=d_model,
+            embedding_dim=hidden_size,
             num_hash_functions=num_hash_functions,
             num_hash_buckets=num_hash_buckets,
             type_vocab_size=type_vocab_size,
@@ -888,7 +889,7 @@ class CanineModel(CaninePretrainedModel):
         )
         # single local encoder
         self.initial_char_encoder = CanineEncoder(
-            hidden_size=d_model,
+            hidden_size=hidden_size,
             activation=activation,
             encoder_ffn_dim=encoder_ffn_dim,
             layer_norm_eps=layer_norm_eps,
@@ -906,7 +907,7 @@ class CanineModel(CaninePretrainedModel):
 
         # stride conv layer for down sampling
         self.chars_to_molecules = CharactersToMolecules(
-            hidden_size=d_model,
+            hidden_size=hidden_size,
             down_sampling_rate=downsampling_rate,
             activation=activation,
             layer_norm_eps=layer_norm_eps
@@ -914,7 +915,7 @@ class CanineModel(CaninePretrainedModel):
 
         # traditional transformer encoder
         self.encoder = CanineEncoder(
-            hidden_size=d_model,
+            hidden_size=hidden_size,
             activation=activation,
             encoder_ffn_dim=encoder_ffn_dim,
             layer_norm_eps=layer_norm_eps,
@@ -926,7 +927,7 @@ class CanineModel(CaninePretrainedModel):
 
         # Conv layer for up sampling
         self.projection = ConvProjection(
-            hidden_size=d_model,
+            hidden_size=hidden_size,
             upsampling_kernel_size=upsampling_kernel_size,
             activation=activation,
             hidden_dropout=hidden_dropout,
@@ -934,7 +935,7 @@ class CanineModel(CaninePretrainedModel):
         )
         # shallow/low-dim transformer encoder to get a final character encoding
         self.final_char_encoder = CanineEncoder(
-            hidden_size=d_model,
+            hidden_size=hidden_size,
             activation=activation,
             encoder_ffn_dim=encoder_ffn_dim,
             layer_norm_eps=layer_norm_eps,
@@ -945,7 +946,7 @@ class CanineModel(CaninePretrainedModel):
         )
 
         if add_pooling_layer:
-            self.pooler = nn.Linear(d_model, d_model)
+            self.pooler = nn.Linear(hidden_size, hidden_size)
             self.pooler_activation = nn.Tanh()
         else:
             self.pooler = None
@@ -955,7 +956,11 @@ class CanineModel(CaninePretrainedModel):
 
     # copy from `transformers.models.albert.modeling_albert.AlbertModel._convert_head_mask_to_5d`
     def _convert_head_mask_to_5d(self, head_mask, num_hidden_layers):
-        """-> [num_hidden_layers x batch x num_heads x seq_length x seq_length]"""
+        """
+        Convert a 1D or 2D head mask into 5D.
+        Return:
+            Tensor with shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
+        """
         if head_mask.dim() == 1:
             head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(
                 -1).unsqueeze(-1)
@@ -1011,7 +1016,7 @@ class CanineModel(CaninePretrainedModel):
             token_type_ids=None,
             attention_mask=None,
             position_ids=None,
-            head_mask=None,  # TODO check use or not
+            head_mask=None,
             inputs_embeds=None,
             return_dict=None,
     ):
@@ -1115,7 +1120,6 @@ class CanineModel(CaninePretrainedModel):
             downsampling_rate=self.downsampling_rate
         )
         head_mask = self.get_head_mask(head_mask, self.num_hidden_layers)
-        # TODO check head mask is not used
 
         # `input_char_embeddings`: shape (batch_size, char_seq, char_dim)
         input_char_embeddings = self.char_embeddings(
@@ -1151,7 +1155,7 @@ class CanineModel(CaninePretrainedModel):
         # feature space; intuitively, this makes sense.
 
         # Refer to the Paper, `molecule_seq_len == char_seq_len/downsampling_rate`
-        # , and `molecule_dim` is just same as hidden size
+        # , and `molecule_dim` is just same as hidden size of model.
         init_molecule_encoding = self.chars_to_molecules(input_char_encoding)
 
         # Traditional Transformer Encoder
@@ -1173,7 +1177,6 @@ class CanineModel(CaninePretrainedModel):
         # `sequence_output`: shape (batch_size, char_seq_len, hidden_size)
         sequence_output = self.projection(concat)
 
-        # final transformer layer
         sequence_output = self.final_char_encoder(
             hidden_states=sequence_output,
             attn_mask=extended_attention_mask,
@@ -1189,6 +1192,343 @@ class CanineModel(CaninePretrainedModel):
 def repeat_interleave(input, repeats, **kwargs):
     # repeat interleave for canine model only!! (avoid paddle.repeat_interleave bug during training.)
     # it could be removed when paddle.interleave bug fixed.
-    batch_size, len_seq, d_model = input.shape
+    batch_size, len_seq, hidden_size = input.shape
     flat_input = paddle.tile(input, repeat_times=(1, 1, repeats))
-    return paddle.reshape(flat_input, [batch_size, -1, d_model])
+    return paddle.reshape(flat_input, [batch_size, -1, hidden_size])
+
+
+class CanineForQuestionAnswering(CaninePretrainedModel):
+    """
+    Canine Model with a linear layer on top of the hidden-states output to compute `span_start_logits`
+    and `span_end_logits`, designed for question-answering tasks like SQuAD or TydiQA.
+
+    Args:
+        canine (:class:`CanineModel`):
+            An instance of CanineModel.
+    """
+
+    def __init__(self, canine):
+        super(CanineForQuestionAnswering, self).__init__()
+        self.canine = canine
+
+        self.classifier = nn.Linear(self.canine.config["hidden_size"], 2)
+        self.apply(self.init_weights)
+
+    def forward(
+            self,
+            input_ids,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            return_dict=False,
+    ):
+        r"""
+        The CanineForQuestionAnswering forward method, overrides the __call__() special method.
+
+        Please refer to `~paddlenlp.transformers.Canine.CanineModel.forward` for more information
+            regarding the arguments.
+
+        Returns:
+            tuple or Dict: Returns tuple (`start_logits, end_logits`)or a dict
+            with `start_logits`, `end_logits` fields.
+
+            With the fields:
+
+            - `start_logits` (Tensor):
+                A tensor of the input token classification logits, indicates the start position of the labelled span.
+                Its data type should be float32 and its shape is [batch_size, sequence_length].
+
+            - `end_logits` (Tensor):
+                A tensor of the input token classification logits, indicates the end position of the labelled span.
+                Its data type should be float32 and its shape is [batch_size, sequence_length].
+
+
+        Example:
+            .. code-block::
+
+                import paddle
+                from paddlenlp.transformers import CanineForQuestionAnswering, CanineTokenizer
+
+                tokenizer = CanineTokenizer.from_pretrained('canine-s')
+                model = CanineForQuestionAnswering.from_pretrained('canine-s')
+
+                inputs = tokenizer("Canine is Tokenization-free!")
+                inputs = {k:paddle.to_tensor([v]) for (k, v) in inputs.items()}
+                start_logits, end_logits = model(**inputs)
+
+        """
+        outputs = self.canine(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            return_dict=return_dict,
+        )
+        sequence_output = outputs[0] if not return_dict \
+            else outputs["last_hidden_state"]
+        logits = self.classifier(sequence_output)
+
+        logits = paddle.transpose(logits, perm=[2, 0, 1])
+        start_logits, end_logits = paddle.unstack(x=logits, axis=0)
+
+        if return_dict:
+            return {
+                "start_logits": start_logits,
+                "end_logits": end_logits,
+            }
+        return start_logits, end_logits
+
+
+# Copied from ..bert.modeling.BertForSequenceClassification with 'bert' replaced with 'canine'.
+class CanineForSequenceClassification(CaninePretrainedModel):
+    """
+    Canine Model with a linear layer on top of the output layer,
+    designed for sequence classification/regression tasks like GLUE tasks.
+
+    Args:
+        canine (:class:`CanineModel`):
+            An instance of CanineModel.
+        num_classes (int, optional):
+            The number of classes. Defaults to `2`.
+        dropout (float, optional):
+            The dropout probability for output of CanineModel.
+            If None, use the same value as `hidden_dropout` of `CanineModel`
+            instance `canine`. Defaults to None.
+    """
+
+    def __init__(self, canine, num_classes=2, dropout=None):
+        super(CanineForSequenceClassification, self).__init__()
+        self.num_classes = num_classes
+        self.canine = canine
+        self.dropout = nn.Dropout(dropout if dropout is not None else self.canine.
+                                  config["hidden_dropout"])
+        self.classifier = nn.Linear(self.canine.config["hidden_size"],
+                                    num_classes)
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                ):
+        r"""
+        The CanineForSequenceClassification forward method, overrides the __call__() special method.
+
+        Please refer to `~paddlenlp.transformers.Canine.CanineModel.forward` for more information
+            regarding the arguments.
+
+        Returns:
+            Tensor: Returns tensor `logits`, a tensor of the input text classification logits.
+            Shape as `[batch_size, num_classes]` and dtype as float32.
+
+        Example:
+            .. code-block::
+
+                import paddle
+                from paddlenlp.transformers import CanineForSequenceClassification
+                from paddlenlp.transformers import CanineTokenizer
+
+                tokenizer = CanineTokenizer.from_pretrained('canine-s')
+                model = CanineForSequenceClassification.from_pretrained('canine-s', num_classes=2)
+
+                inputs = tokenizer("Welcome to use PaddlePaddle and PaddleNLP!")
+                inputs = {k:paddle.to_tensor([v]) for (k, v) in inputs.items()}
+
+                logits = model(**inputs)
+
+        """
+
+        _, pooled_output = self.canine(input_ids,
+                                       token_type_ids=token_type_ids,
+                                       position_ids=position_ids,
+                                       attention_mask=attention_mask,
+                                       )
+
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+        return logits
+
+
+# Copied from ..bert.modeling.BertForTokenClassification with 'bert' replaced with 'canine'.
+class CanineForTokenClassification(CaninePretrainedModel):
+    """
+    Canine Model with a linear layer on top of the hidden-states output layer,
+    designed for token classification tasks like NER tasks.
+
+    Args:
+        canine (:class:`CanineModel`):
+            An instance of CanineModel.
+        num_classes (int, optional):
+            The number of classes. Defaults to `2`.
+        dropout (float, optional):
+            The dropout probability for output of canine.
+            If None, use the same value as `hidden_dropout_prob` of `CanineModel`
+            instance `canine`. Defaults to None.
+    """
+
+    def __init__(self, canine, num_classes=2, dropout=None):
+        super(CanineForTokenClassification, self).__init__()
+        self.num_classes = num_classes
+        self.canine = canine
+        self.dropout = nn.Dropout(dropout if dropout is not None else self.canine.
+                                  config["hidden_dropout"])
+        self.classifier = nn.Linear(self.canine.config["hidden_size"],
+                                    num_classes)
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None):
+        r"""
+        The CanineForTokenClassification forward method, overrides the __call__() special method.
+
+        Please refer to `~paddlenlp.transformers.Canine.CanineModel.forward` for more information
+            regarding the arguments.
+
+        Returns:
+            Tensor: Returns tensor `logits`, a tensor of the input token classification logits.
+            Shape as `[batch_size, sequence_length, num_classes]` and dtype as `float32`.
+
+        Example:
+            .. code-block::
+
+                import paddle
+                from paddlenlp.transformers import CanineForTokenClassification
+                from paddlenlp.transformers import CanineTokenizer
+
+                tokenizer = CanineTokenizer.from_pretrained('canine-s')
+                model = CanineForTokenClassification.from_pretrained('canine-s', num_classes=2)
+
+                inputs = tokenizer("Welcome to use PaddlePaddle and PaddleNLP!")
+                inputs = {k:paddle.to_tensor([v]) for (k, v) in inputs.items()}
+
+                logits = model(**inputs)
+                print(logits.shape)
+                # [1, 13, 2]
+
+        """
+        sequence_output, _ = self.canine(input_ids,
+                                         token_type_ids=token_type_ids,
+                                         position_ids=position_ids,
+                                         attention_mask=attention_mask)
+
+        sequence_output = self.dropout(sequence_output)
+        logits = self.classifier(sequence_output)
+        return logits
+
+
+# Copied from ..bert.modeling.BertForMultipleChoice with 'bert' replaced with 'canine'.
+class CanineForMultipleChoice(CaninePretrainedModel):
+    """
+    Canine Model with a linear layer on top of the hidden-states output layer,
+    designed for multiple choice tasks like RocStories/SWAG tasks.
+
+    Args:
+        canine (:class:`CanineModel`):
+            An instance of CanineModel.
+        num_choices (int, optional):
+            The number of choices. Defaults to `2`.
+        dropout (float, optional):
+            The dropout probability for output of Canine.
+            If None, use the same value as `hidden_dropout` of `CanineModel`
+            instance `canine`. Defaults to None.
+    """
+
+    def __init__(self, canine, num_choices=2, dropout=None):
+        super(CanineForMultipleChoice, self).__init__()
+        self.num_choices = num_choices
+        self.canine = canine
+        self.dropout = nn.Dropout(dropout if dropout is not None else self.canine.
+                                  config["hidden_dropout"])
+        self.classifier = nn.Linear(self.canine.config["hidden_size"], 1)
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None):
+        r"""
+        The CanineForMultipleChoice forward method, overrides the __call__() special method.
+
+        Please refer to `~paddlenlp.transformers.Canine.CanineModel.forward` for more information
+            regarding the arguments.
+
+        Returns:
+            Tensor: Returns tensor `reshaped_logits`, a tensor of the multiple choice classification logits.
+            Shape as `[batch_size, num_choice]` and dtype as `float32`.
+
+        Example:
+            .. code-block::
+
+                import paddle
+                from paddlenlp.transformers import CanineForMultipleChoice, CanineTokenizer
+                from paddlenlp.data import Pad, Dict
+
+                tokenizer = CanineTokenizer.from_pretrained('canine-s')
+                model = CanineForMultipleChoice.from_pretrained('canine-s', num_choices=2)
+
+                data = [
+                    {
+                        "question": "how do you turn on an ipad screen?",
+                        "answer1": "press the volume button.",
+                        "answer2": "press the lock button.",
+                        "label": 1,
+                    },
+                    {
+                        "question": "how do you indent something?",
+                        "answer1": "leave a space before starting the writing",
+                        "answer2": "press the spacebar",
+                        "label": 0,
+                    },
+                ]
+
+                text = []
+                text_pair = []
+                for d in data:
+                    text.append(d["question"])
+                    text_pair.append(d["answer1"])
+                    text.append(d["question"])
+                    text_pair.append(d["answer2"])
+
+                inputs = tokenizer(text, text_pair, padding="longest")
+
+                reshaped_logits = model(**inputs)
+
+                print(reshaped_logits.shape)
+                # [2, 2]
+
+        """
+        # input_ids: [bs, num_choice, seq_l]
+        input_ids = input_ids.reshape(shape=(
+            -1, input_ids.shape[-1]))  # flat_input_ids: [bs*num_choice,seq_l]
+
+        if position_ids is not None:
+            position_ids = position_ids.reshape(shape=(-1,
+                                                       position_ids.shape[-1]))
+        if token_type_ids is not None:
+            token_type_ids = token_type_ids.reshape(
+                shape=(-1, token_type_ids.shape[-1]))
+
+        if attention_mask is not None:
+            attention_mask = attention_mask.reshape(
+                shape=(-1, attention_mask.shape[-1]))
+
+        _, pooled_output = self.canine(input_ids,
+                                       token_type_ids=token_type_ids,
+                                       position_ids=position_ids,
+                                       attention_mask=attention_mask)
+        pooled_output = self.dropout(pooled_output)
+
+        logits = self.classifier(pooled_output)  # logits: (bs*num_choice,1)
+        reshaped_logits = logits.reshape(
+            shape=(-1, self.num_choices))  # logits: (bs, num_choice)
+
+        return reshaped_logits
