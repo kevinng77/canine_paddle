@@ -56,7 +56,7 @@ def keep_check(args):
         return input_ids
     print(">>> running forward propagation check, 10 random samples")
 
-    pd_model, PDtokenizer = load_paddle()
+    pd_model, PDtokenizer = load_paddle(model_name=args.model_dir)
     pt_model, PTtokenizer = load_torch()
     for _ in range(args.num_test):
         acc_mean, acc_max = 0, 0
@@ -95,7 +95,7 @@ def run_check(args):
 
     @timer
     def get_paddle_result():
-        pd_model, PDtokenizer = load_paddle()
+        pd_model, PDtokenizer = load_paddle(model_name=args.model_dir)
         inputs = PDtokenizer(text,
                              padding="longest",
                              return_attention_mask=True,  # matters, need to add!!!
@@ -126,6 +126,7 @@ def get_args():
     parser.add_argument("--mode",default="keep_check",type=str)
     parser.add_argument("--debug",action='store_true')
     parser.add_argument("--num_test", type=int, default=10, help="number of test")
+    parser.add_argument("--model_dir",default="data/paddle_weight")
     return parser.parse_args()
 
 
