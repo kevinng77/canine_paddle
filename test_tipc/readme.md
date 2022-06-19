@@ -26,6 +26,14 @@ Canine 提供了 tokenization-free 的预训练模型方案，提高了模型在
 
 ## 开始使用
 
+环境准备
+
+```
+paddlepaddl==2.3.0
+reprod_log 
+paddlenlp==2.3.1
+```
+
 ### 基础使用
 
 ```python
@@ -76,13 +84,13 @@ python -m tools.predict --model_dir=canine-s-tydiqa-finetuned
 
 **模型动态转静态：**
 
-使用下面的命令完成`canine-s`模型的动转静导出，其中 `canine-s-tydiqa-finetuned` 为在 TydiQA 任务上微调后的权重 。
+使用下面的命令完成 `canine-s`模型的动转静导出，其中 `canine-s-tydiqa-finetuned` 为在 TydiQA 任务上微调后的权重 。
 
 ```shell
 python tools/export_model.py --save_inference_dir=./canine_infer --model_path=canine-s-tydiqa-finetuned
 ```
 
-最终在`canine_infer/`文件夹下会生成3个 `inference.xxx`文件。
+最终在 `canine_infer/`文件夹下会生成3个 `inference.xxx`文件。
 
 **模型推理：**
 

@@ -17,7 +17,7 @@ class CanineForTydiQA(CaninePretrainedModel):
     base_model_prefix = "canine"
     pretrained_init_configuration = {
         "canine-s": {
-            "d_model": 768,
+            "hidden_size": 768,
             "bos_token_id": 57344,
             "eos_token_id": 57345,
             "pad_token_id": 0,
@@ -39,7 +39,7 @@ class CanineForTydiQA(CaninePretrainedModel):
             'model_max_length': 2048
         },
         "canine-s-tydiqa-finetuned":{
-            "d_model": 768,
+            "hidden_size": 768,
             "bos_token_id": 57344,
             "eos_token_id": 57345,
             "pad_token_id": 0,
@@ -79,7 +79,7 @@ class CanineForTydiQA(CaninePretrainedModel):
 
         # dense layer for generate start, end prediction
         self.span_classifier = nn.Linear(
-            in_features=self.canine.config["d_model"],
+            in_features=self.canine.config["hidden_size"],
             out_features=2,
             weight_attr=paddle.framework.ParamAttr(
                 name="span_linear_weight",
@@ -90,7 +90,7 @@ class CanineForTydiQA(CaninePretrainedModel):
 
         # there are 5 type of answers in tydiQA, the 5 is hard coded.
         self.answer_type_classifier = nn.Linear(
-            in_features=self.canine.config["d_model"],
+            in_features=self.canine.config["hidden_size"],
             out_features=5,
             weight_attr=paddle.framework.ParamAttr(
                 name="answer_type_linear_weight",
